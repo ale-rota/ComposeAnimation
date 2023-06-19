@@ -56,9 +56,9 @@ enum class States {
 
 private const val TOOLBAR_MARGIN_TOP_PX = 100f
 private const val TOOLBAR_HEIGHT_PX = 140f
-private const val TOP_CURTAIN_HEIGHT_PX = TOOLBAR_MARGIN_TOP_PX + TOOLBAR_HEIGHT_PX + 50
+private const val TOP_CURTAIN_HEIGHT_PX = TOOLBAR_MARGIN_TOP_PX + TOOLBAR_HEIGHT_PX + 30
 
-private const val EXPANDED_OFFSET = TOOLBAR_MARGIN_TOP_PX - TOOLBAR_HEIGHT_PX / 2
+private const val EXPANDED_OFFSET = TOOLBAR_MARGIN_TOP_PX + TOOLBAR_HEIGHT_PX / 2
 private const val COLLAPSED_OFFSET_PX = 800f
 private const val DRAG_RANGE = COLLAPSED_OFFSET_PX - EXPANDED_OFFSET
 private const val ANIMATION_START_OFFSET = EXPANDED_OFFSET + DRAG_RANGE * 0.3f
@@ -67,11 +67,10 @@ private const val MAX_SCALE = 1f
 
 private const val BOTTOM_ELEMENT_HEIGHT_PX = 200f
 
-private const val BOTTOM_ELEMENT_Z_INDEX = 5f
-private const val TOOLBAR_Z_INDEX = 4f
-private const val TOP_CURTAIN_Z_INDEX = 3f
-private const val BODY_Z_INDEX = 2f
-private const val BACKGROUND_IMAGE_Z_INDEX = 1f
+private const val BOTTOM_ELEMENT_Z_INDEX = 4f
+private const val TOOLBAR_Z_INDEX = 3f
+private const val TOP_CURTAIN_Z_INDEX = 2f
+private const val BODY_Z_INDEX = 1f
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -113,10 +112,11 @@ fun FullHeightBottomSheet(
 
         TopCurtain(
             modifier = Modifier.offset {
-                println("curtain offset: ${-swipeableState.offset.value.roundToInt()}")
+                val offset = -swipeableState.offset.value.roundToInt() + EXPANDED_OFFSET.roundToInt()
+                println("curtain offset: $offset")
                 IntOffset(
                     0,
-                    -swipeableState.offset.value.roundToInt()
+                    -swipeableState.offset.value.roundToInt() + EXPANDED_OFFSET.roundToInt()
                 )
             },
             zIndex = TOP_CURTAIN_Z_INDEX
@@ -134,13 +134,13 @@ fun FullHeightBottomSheet(
                 .zIndex(0f)
         )
 
-        // Header sticking out
+        // Sticking search bar
         Box(
             Modifier
                 .offset {
                     IntOffset(
                         0,
-                        swipeableState.offset.value.roundToInt()
+                        swipeableState.offset.value.roundToInt() - (BOTTOM_ELEMENT_HEIGHT_PX / 2).roundToInt()
                     )
                 }
                 .zIndex(BOTTOM_ELEMENT_Z_INDEX)
@@ -167,7 +167,7 @@ fun FullHeightBottomSheet(
                 .offset {
                     IntOffset(
                         0,
-                        swipeableState.offset.value.roundToInt() + (BOTTOM_ELEMENT_HEIGHT_PX / 2).roundToInt()
+                        swipeableState.offset.value.roundToInt()
                     )
                 }
                 .zIndex(BODY_Z_INDEX)
@@ -295,7 +295,7 @@ fun SheetPw() {
                 item { Spacer(modifier = Modifier.height(120.dp)) }
 
                 // List items
-                items(100) {
+                items(50) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
