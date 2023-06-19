@@ -1,8 +1,6 @@
 package com.alerota.composeanimation
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -16,6 +14,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
@@ -29,23 +28,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import kotlin.math.roundToInt
 
@@ -58,10 +54,10 @@ private const val TOOLBAR_MARGIN_TOP_PX = 100f
 private const val TOOLBAR_HEIGHT_PX = 140f
 private const val TOP_CURTAIN_HEIGHT_PX = TOOLBAR_MARGIN_TOP_PX + TOOLBAR_HEIGHT_PX + 30
 
-private const val EXPANDED_OFFSET = TOOLBAR_MARGIN_TOP_PX + TOOLBAR_HEIGHT_PX / 2
-private const val COLLAPSED_OFFSET_PX = 800f
+const val EXPANDED_OFFSET = TOOLBAR_MARGIN_TOP_PX + TOOLBAR_HEIGHT_PX / 2
+const val COLLAPSED_OFFSET_PX = 800f
 private const val DRAG_RANGE = COLLAPSED_OFFSET_PX - EXPANDED_OFFSET
-private const val ANIMATION_START_OFFSET = EXPANDED_OFFSET + DRAG_RANGE * 0.3f
+const val ANIMATION_START_OFFSET = EXPANDED_OFFSET + DRAG_RANGE * 0.3f
 private const val MIN_SCALE = .7f
 private const val MAX_SCALE = 1f
 
@@ -112,8 +108,6 @@ fun FullHeightBottomSheet(
 
         TopCurtain(
             modifier = Modifier.offset {
-                val offset = -swipeableState.offset.value.roundToInt() + EXPANDED_OFFSET.roundToInt()
-                println("curtain offset: $offset")
                 IntOffset(
                     0,
                     -swipeableState.offset.value.roundToInt() + EXPANDED_OFFSET.roundToInt()
@@ -124,14 +118,11 @@ fun FullHeightBottomSheet(
 
         Toolbar(zIndex = TOOLBAR_Z_INDEX)
 
-        Image(
-            painterResource(R.drawable.food),
-            contentDescription = "",
-            contentScale = ContentScale.Crop,
+        BackgroundImage(
             modifier = Modifier
                 .height(400.dp)
-                .fillMaxWidth()
-                .zIndex(0f)
+                .fillMaxWidth(),
+            swipeableState = swipeableState
         )
 
         // Sticking search bar
@@ -178,9 +169,10 @@ fun FullHeightBottomSheet(
                     .fillMaxHeight(),
                 contentAlignment = Alignment.TopCenter
             ) {
-                body(modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.Magenta)
+                body(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.Magenta)
                 )
             }
         }
@@ -194,8 +186,7 @@ fun Toolbar(zIndex: Float) {
             .fillMaxWidth()
             .height(with(LocalDensity.current) { TOOLBAR_HEIGHT_PX.toDp() })
             .offset(y = with(LocalDensity.current) { TOOLBAR_MARGIN_TOP_PX.toDp() })
-            .zIndex(zIndex)
-            .border(2.dp, Color.Red),
+            .zIndex(zIndex),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Left element
@@ -225,39 +216,21 @@ fun SearchBar(
     val headerScale by remember {
         derivedStateOf {
             val currentOffset = swipeableState.offset.value
-            println("aaa offset: $currentOffset")
             val scale = if (currentOffset < ANIMATION_START_OFFSET) {
                 val oldValueRange = ANIMATION_START_OFFSET - EXPANDED_OFFSET
                 val newValueRange = MAX_SCALE - MIN_SCALE
-                println("aaa calculated: ${((currentOffset - EXPANDED_OFFSET) / oldValueRange) * newValueRange + MIN_SCALE}")
                 ((currentOffset - EXPANDED_OFFSET) / oldValueRange) * newValueRange + MIN_SCALE
 
             } else MAX_SCALE
-            println("aaa scale: $scale")
             return@derivedStateOf scale
         }
     }
 
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .drawBehind {
-                val size = this.size
-                val path = Path().apply {
-                    addRoundRect(
-                        RoundRect(
-                            rect = Rect(
-                                offset = Offset(0f, BOTTOM_ELEMENT_HEIGHT_PX / 2),
-                                size = size,
-                            )
-                        )
-                    )
-                }
-                drawPath(path, color = Color.Transparent)
-            },
+            .fillMaxWidth(),
         contentAlignment = Alignment.TopCenter
     ) {
-        println("offset: ${swipeableState.offset.value.roundToInt()}")
         header(
             modifier = Modifier
                 .height(with(LocalDensity.current) { BOTTOM_ELEMENT_HEIGHT_PX.toDp() })
@@ -275,6 +248,7 @@ fun TopCurtain(modifier: Modifier, zIndex: Float) {
             .fillMaxWidth()
             .height(with(LocalDensity.current) { TOP_CURTAIN_HEIGHT_PX.toDp() })
             .zIndex(zIndex)
+            .shadow(zIndex.dp)
             .background(Color.White)
     )
 }
@@ -286,7 +260,9 @@ fun SheetPw() {
         header = {
             Box(
                 modifier = it
+                    .clip(RoundedCornerShape(36.dp))
                     .background(Color.Green)
+
             )
         },
         body = {
@@ -299,13 +275,16 @@ fun SheetPw() {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp)
-                            .height(80.dp)
+                            .padding(vertical = 8.dp, horizontal = 20.dp)
+                            .height(80.dp),
+                        backgroundColor = Color.LightGray,
+                        shape = RoundedCornerShape(10.dp)
                     ) {
                         Text(
                             text = "Item $it",
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            fontSize = 20.sp,
                         )
                     }
                 }
