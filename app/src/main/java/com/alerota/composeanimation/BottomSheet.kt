@@ -2,6 +2,7 @@ package com.alerota.composeanimation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
@@ -24,10 +24,13 @@ import androidx.compose.material.Text
 import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
@@ -37,11 +40,11 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import kotlin.math.roundToInt
@@ -51,17 +54,41 @@ enum class States {
     COLLAPSED
 }
 
-private const val EXPANDED_OFFSET = 200f
-private const val COLLAPSED_OFFSET = 800f
+private const val TOOLBAR_MARGIN_TOP_PX = 100f
+
+private const val EXPANDED_OFFSET = TOOLBAR_MARGIN_TOP_PX
+private const val COLLAPSED_OFFSET_PX = 800f
+private const val DRAG_RANGE = COLLAPSED_OFFSET_PX - EXPANDED_OFFSET
+private const val ANIMATION_START_OFFSET = EXPANDED_OFFSET + DRAG_RANGE * 0.3f
+private const val MIN_SCALE = .7f
+private const val MAX_SCALE = 1f
+
+private val BOTTOM_ELEMENT_HEIGHT_DP = 100.dp
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun FullHeightBottomSheet(
-    header: @Composable () -> Unit,
+    header: @Composable (modifier: Modifier) -> Unit,
     body: @Composable () -> Unit
 ) {
-    val swipeableState = rememberSwipeableState(initialValue = States.COLLAPSED)
-    val scrollState = rememberScrollState()
+    val swipeableState = rememberSwipeableState(initialValue = States.EXPANDED)
+    val headerScale by remember {
+        derivedStateOf {
+            return@derivedStateOf 1f
+            val currentOffset = swipeableState.offset.value
+            println("aaa offset: $currentOffset")
+            val scale = if (currentOffset < ANIMATION_START_OFFSET) {
+                val oldValueRange = ANIMATION_START_OFFSET - EXPANDED_OFFSET
+                val newValueRange = MAX_SCALE - MIN_SCALE
+                println("aaa calculated: ${((currentOffset - EXPANDED_OFFSET) / oldValueRange) * newValueRange + MIN_SCALE}")
+                ((currentOffset - EXPANDED_OFFSET) / oldValueRange) * newValueRange + MIN_SCALE
+
+            } else MAX_SCALE
+            println("aaa scale: $scale")
+            return@derivedStateOf scale
+        }
+    }
+    val bottomElementHeightPx = with(LocalDensity.current) { BOTTOM_ELEMENT_HEIGHT_DP.toPx() }
 
     BoxWithConstraints {
 
@@ -72,7 +99,6 @@ fun FullHeightBottomSheet(
                     available: Offset,
                     source: NestedScrollSource
                 ): Offset {
-                    println("onPreScroll y= ${available.y}")
                     val delta = available.y
                     return if (delta < 0) {
                         swipeableState.performDrag(delta).toOffset()
@@ -86,28 +112,8 @@ fun FullHeightBottomSheet(
                     available: Offset,
                     source: NestedScrollSource
                 ): Offset {
-                    println("onPostScroll y= ${available.y}")
                     val delta = available.y
                     return swipeableState.performDrag(delta).toOffset()
-                }
-
-                override suspend fun onPreFling(available: Velocity): Velocity {
-                    println("onPreFling y= ${available.y}")
-                    return if (available.y < 0 && scrollState.value == 0) {
-                        swipeableState.performFling(available.y)
-                        available
-                    } else {
-                        Velocity.Zero
-                    }
-                }
-
-                override suspend fun onPostFling(
-                    consumed: Velocity,
-                    available: Velocity
-                ): Velocity {
-                    println("onPostFling y= ${available.y}")
-                    swipeableState.performFling(velocity = available.y)
-                    return super.onPostFling(consumed, available)
                 }
 
                 private fun Float.toOffset() = Offset(0f, this)
@@ -133,7 +139,7 @@ fun FullHeightBottomSheet(
                     orientation = Orientation.Vertical,
                     anchors = mapOf(
                         EXPANDED_OFFSET to States.EXPANDED,
-                        COLLAPSED_OFFSET to States.COLLAPSED,
+                        COLLAPSED_OFFSET_PX to States.COLLAPSED,
                     )
                 )
                 .nestedScroll(connection)
@@ -153,7 +159,7 @@ fun FullHeightBottomSheet(
                             addRoundRect(
                                 RoundRect(
                                     rect = Rect(
-                                        offset = Offset(0f, 80f),
+                                        offset = Offset(0f, bottomElementHeightPx / 2),
                                         size = size,
                                     )
                                 )
@@ -163,7 +169,14 @@ fun FullHeightBottomSheet(
                     },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                header()
+                println("offset: ${swipeableState.offset.value.roundToInt()}")
+                header(
+                    modifier = Modifier
+                        .height(BOTTOM_ELEMENT_HEIGHT_DP)
+                        .width(350.dp)
+                        .scale(headerScale)
+                        .zIndex(5f)
+                )
                 body()
             }
         }
@@ -175,8 +188,10 @@ fun Toolbar() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .offset(y = 80.dp)
-            .zIndex(1f),
+            .offset(y = with(LocalDensity.current) { TOOLBAR_MARGIN_TOP_PX.toDp() })
+            .zIndex(1f)
+            .border(2.dp, Color.Red)
+        ,
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Left element
@@ -203,10 +218,7 @@ fun SheetPw() {
     FullHeightBottomSheet(
         header = {
             Box(
-                modifier = Modifier
-                    .height(50.dp)
-                    .width(200.dp)
-                    .zIndex(5f)
+                modifier = it
                     .background(Color.Green)
             )
         },
@@ -231,10 +243,4 @@ fun SheetPw() {
             }
         }
     )
-}
-
-@Preview
-@Composable
-fun ToolbarPw() {
-    Toolbar()
 }
