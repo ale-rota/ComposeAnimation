@@ -6,7 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -55,8 +54,9 @@ enum class States {
 }
 
 private const val TOOLBAR_MARGIN_TOP_PX = 100f
+private const val TOOLBAR_HEIGHT_PX = 140f
 
-private const val EXPANDED_OFFSET = TOOLBAR_MARGIN_TOP_PX
+private const val EXPANDED_OFFSET = TOOLBAR_MARGIN_TOP_PX - TOOLBAR_HEIGHT_PX / 2
 private const val COLLAPSED_OFFSET_PX = 800f
 private const val DRAG_RANGE = COLLAPSED_OFFSET_PX - EXPANDED_OFFSET
 private const val ANIMATION_START_OFFSET = EXPANDED_OFFSET + DRAG_RANGE * 0.3f
@@ -71,10 +71,9 @@ fun FullHeightBottomSheet(
     header: @Composable (modifier: Modifier) -> Unit,
     body: @Composable () -> Unit
 ) {
-    val swipeableState = rememberSwipeableState(initialValue = States.EXPANDED)
+    val swipeableState = rememberSwipeableState(initialValue = States.COLLAPSED)
     val headerScale by remember {
         derivedStateOf {
-            return@derivedStateOf 1f
             val currentOffset = swipeableState.offset.value
             println("aaa offset: $currentOffset")
             val scale = if (currentOffset < ANIMATION_START_OFFSET) {
@@ -90,35 +89,35 @@ fun FullHeightBottomSheet(
     }
     val bottomElementHeightPx = with(LocalDensity.current) { BOTTOM_ELEMENT_HEIGHT_DP.toPx() }
 
-    BoxWithConstraints {
+    val connection = remember {
+        object : NestedScrollConnection {
 
-        val connection = remember {
-            object : NestedScrollConnection {
-
-                override fun onPreScroll(
-                    available: Offset,
-                    source: NestedScrollSource
-                ): Offset {
-                    val delta = available.y
-                    return if (delta < 0) {
-                        swipeableState.performDrag(delta).toOffset()
-                    } else {
-                        Offset.Zero
-                    }
+            override fun onPreScroll(
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                val delta = available.y
+                return if (delta < 0) {
+                    swipeableState.performDrag(delta).toOffset()
+                } else {
+                    Offset.Zero
                 }
-
-                override fun onPostScroll(
-                    consumed: Offset,
-                    available: Offset,
-                    source: NestedScrollSource
-                ): Offset {
-                    val delta = available.y
-                    return swipeableState.performDrag(delta).toOffset()
-                }
-
-                private fun Float.toOffset() = Offset(0f, this)
             }
+
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                val delta = available.y
+                return swipeableState.performDrag(delta).toOffset()
+            }
+
+            private fun Float.toOffset() = Offset(0f, this)
         }
+    }
+
+    BoxWithConstraints {
 
         Toolbar()
 
@@ -150,7 +149,7 @@ fun FullHeightBottomSheet(
                     )
                 }
         ) {
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxHeight()
                     .drawBehind {
@@ -167,7 +166,8 @@ fun FullHeightBottomSheet(
                         }
                         drawPath(path, color = Color.Magenta)
                     },
-                horizontalAlignment = Alignment.CenterHorizontally
+                contentAlignment = Alignment.TopCenter
+                //horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 println("offset: ${swipeableState.offset.value.roundToInt()}")
                 header(
@@ -188,6 +188,7 @@ fun Toolbar() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .height(with(LocalDensity.current) { TOOLBAR_HEIGHT_PX.toDp() })
             .offset(y = with(LocalDensity.current) { TOOLBAR_MARGIN_TOP_PX.toDp() })
             .zIndex(1f)
             .border(2.dp, Color.Red)
@@ -224,6 +225,9 @@ fun SheetPw() {
         },
         body = {
             LazyColumn {
+                //TODO put inside FullHeightBottomSheet
+                item { Spacer(modifier = Modifier.height(120.dp)) }
+
                 // List items
                 items(100) {
                     Card(
