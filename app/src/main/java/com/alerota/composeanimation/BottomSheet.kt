@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.SwipeableState
 import androidx.compose.material.Text
 import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
@@ -64,7 +65,7 @@ private const val ANIMATION_START_OFFSET = EXPANDED_OFFSET + DRAG_RANGE * 0.3f
 private const val MIN_SCALE = .7f
 private const val MAX_SCALE = 1f
 
-private val BOTTOM_ELEMENT_HEIGHT_DP = 100.dp
+private const val BOTTOM_ELEMENT_HEIGHT_PX = 200f
 
 private const val BOTTOM_ELEMENT_Z_INDEX = 5f
 private const val TOOLBAR_Z_INDEX = 4f
@@ -79,22 +80,6 @@ fun FullHeightBottomSheet(
     body: @Composable (modifier: Modifier) -> Unit
 ) {
     val swipeableState = rememberSwipeableState(initialValue = States.COLLAPSED)
-    val headerScale by remember {
-        derivedStateOf {
-            val currentOffset = swipeableState.offset.value
-            println("aaa offset: $currentOffset")
-            val scale = if (currentOffset < ANIMATION_START_OFFSET) {
-                val oldValueRange = ANIMATION_START_OFFSET - EXPANDED_OFFSET
-                val newValueRange = MAX_SCALE - MIN_SCALE
-                println("aaa calculated: ${((currentOffset - EXPANDED_OFFSET) / oldValueRange) * newValueRange + MIN_SCALE}")
-                ((currentOffset - EXPANDED_OFFSET) / oldValueRange) * newValueRange + MIN_SCALE
-
-            } else MAX_SCALE
-            println("aaa scale: $scale")
-            return@derivedStateOf scale
-        }
-    }
-    val bottomElementHeightPx = with(LocalDensity.current) { BOTTOM_ELEMENT_HEIGHT_DP.toPx() }
 
     val connection = remember {
         object : NestedScrollConnection {
@@ -126,15 +111,18 @@ fun FullHeightBottomSheet(
 
     BoxWithConstraints {
 
-        TopCurtain(modifier = Modifier.offset {
-            println("curtain offset: ${- swipeableState.offset.value.roundToInt()}")
-            IntOffset(
-                0,
-                - swipeableState.offset.value.roundToInt()
-            )
-        })
+        TopCurtain(
+            modifier = Modifier.offset {
+                println("curtain offset: ${-swipeableState.offset.value.roundToInt()}")
+                IntOffset(
+                    0,
+                    -swipeableState.offset.value.roundToInt()
+                )
+            },
+            zIndex = TOP_CURTAIN_Z_INDEX
+        )
 
-        Toolbar()
+        Toolbar(zIndex = TOOLBAR_Z_INDEX)
 
         Image(
             painterResource(R.drawable.food),
@@ -146,6 +134,25 @@ fun FullHeightBottomSheet(
                 .zIndex(0f)
         )
 
+        // Header sticking out
+        Box(
+            Modifier
+                .offset {
+                    IntOffset(
+                        0,
+                        swipeableState.offset.value.roundToInt()
+                    )
+                }
+                .zIndex(BOTTOM_ELEMENT_Z_INDEX)
+        ) {
+            SearchBar(
+                modifier = Modifier.zIndex(BOTTOM_ELEMENT_Z_INDEX),
+                swipeableState = swipeableState,
+                header = header
+            )
+        }
+
+        // List
         Box(
             Modifier
                 .swipeable(
@@ -160,52 +167,34 @@ fun FullHeightBottomSheet(
                 .offset {
                     IntOffset(
                         0,
-                        swipeableState.offset.value.roundToInt()
+                        swipeableState.offset.value.roundToInt() + (BOTTOM_ELEMENT_HEIGHT_PX / 2).roundToInt()
                     )
                 }
+                .zIndex(BODY_Z_INDEX)
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .drawBehind {
-                        val size = this.size
-                        val path = Path().apply {
-                            addRoundRect(
-                                RoundRect(
-                                    rect = Rect(
-                                        offset = Offset(0f, bottomElementHeightPx / 2),
-                                        size = size,
-                                    )
-                                )
-                            )
-                        }
-                        drawPath(path, color = Color.Magenta)
-                    },
+                    .fillMaxWidth()
+                    .fillMaxHeight(),
                 contentAlignment = Alignment.TopCenter
-                //horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                println("offset: ${swipeableState.offset.value.roundToInt()}")
-                header(
-                    modifier = Modifier
-                        .height(BOTTOM_ELEMENT_HEIGHT_DP)
-                        .width(350.dp)
-                        .scale(headerScale)
-                        .zIndex(BOTTOM_ELEMENT_Z_INDEX)
+                body(modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Magenta)
                 )
-                body(modifier = Modifier.zIndex(BODY_Z_INDEX))
             }
         }
     }
 }
 
 @Composable
-fun Toolbar() {
+fun Toolbar(zIndex: Float) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(with(LocalDensity.current) { TOOLBAR_HEIGHT_PX.toDp() })
             .offset(y = with(LocalDensity.current) { TOOLBAR_MARGIN_TOP_PX.toDp() })
-            .zIndex(TOOLBAR_Z_INDEX)
+            .zIndex(zIndex)
             .border(2.dp, Color.Red),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -226,13 +215,66 @@ fun Toolbar() {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun TopCurtain(modifier: Modifier) {
+fun SearchBar(
+    modifier: Modifier,
+    swipeableState: SwipeableState<States>,
+    header: @Composable (modifier: Modifier) -> Unit,
+) {
+    val headerScale by remember {
+        derivedStateOf {
+            val currentOffset = swipeableState.offset.value
+            println("aaa offset: $currentOffset")
+            val scale = if (currentOffset < ANIMATION_START_OFFSET) {
+                val oldValueRange = ANIMATION_START_OFFSET - EXPANDED_OFFSET
+                val newValueRange = MAX_SCALE - MIN_SCALE
+                println("aaa calculated: ${((currentOffset - EXPANDED_OFFSET) / oldValueRange) * newValueRange + MIN_SCALE}")
+                ((currentOffset - EXPANDED_OFFSET) / oldValueRange) * newValueRange + MIN_SCALE
+
+            } else MAX_SCALE
+            println("aaa scale: $scale")
+            return@derivedStateOf scale
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .drawBehind {
+                val size = this.size
+                val path = Path().apply {
+                    addRoundRect(
+                        RoundRect(
+                            rect = Rect(
+                                offset = Offset(0f, BOTTOM_ELEMENT_HEIGHT_PX / 2),
+                                size = size,
+                            )
+                        )
+                    )
+                }
+                drawPath(path, color = Color.Transparent)
+            },
+        contentAlignment = Alignment.TopCenter
+    ) {
+        println("offset: ${swipeableState.offset.value.roundToInt()}")
+        header(
+            modifier = Modifier
+                .height(with(LocalDensity.current) { BOTTOM_ELEMENT_HEIGHT_PX.toDp() })
+                .width(350.dp)
+                .scale(headerScale)
+                .zIndex(BOTTOM_ELEMENT_Z_INDEX)
+        )
+    }
+}
+
+@Composable
+fun TopCurtain(modifier: Modifier, zIndex: Float) {
     Box(
         modifier
             .fillMaxWidth()
             .height(with(LocalDensity.current) { TOP_CURTAIN_HEIGHT_PX.toDp() })
-            .zIndex(TOP_CURTAIN_Z_INDEX)
+            .zIndex(zIndex)
             .background(Color.White)
     )
 }
