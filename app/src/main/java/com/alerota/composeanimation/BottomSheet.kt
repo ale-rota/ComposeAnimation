@@ -55,6 +55,7 @@ enum class States {
 
 private const val TOOLBAR_MARGIN_TOP_PX = 100f
 private const val TOOLBAR_HEIGHT_PX = 140f
+private const val TOP_CURTAIN_HEIGHT_PX = TOOLBAR_MARGIN_TOP_PX + TOOLBAR_HEIGHT_PX + 50
 
 private const val EXPANDED_OFFSET = TOOLBAR_MARGIN_TOP_PX - TOOLBAR_HEIGHT_PX / 2
 private const val COLLAPSED_OFFSET_PX = 800f
@@ -65,11 +66,17 @@ private const val MAX_SCALE = 1f
 
 private val BOTTOM_ELEMENT_HEIGHT_DP = 100.dp
 
+private const val BOTTOM_ELEMENT_Z_INDEX = 5f
+private const val TOOLBAR_Z_INDEX = 4f
+private const val TOP_CURTAIN_Z_INDEX = 3f
+private const val BODY_Z_INDEX = 2f
+private const val BACKGROUND_IMAGE_Z_INDEX = 1f
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun FullHeightBottomSheet(
     header: @Composable (modifier: Modifier) -> Unit,
-    body: @Composable () -> Unit
+    body: @Composable (modifier: Modifier) -> Unit
 ) {
     val swipeableState = rememberSwipeableState(initialValue = States.COLLAPSED)
     val headerScale by remember {
@@ -118,6 +125,14 @@ fun FullHeightBottomSheet(
     }
 
     BoxWithConstraints {
+
+        TopCurtain(modifier = Modifier.offset {
+            println("curtain offset: ${- swipeableState.offset.value.roundToInt()}")
+            IntOffset(
+                0,
+                - swipeableState.offset.value.roundToInt()
+            )
+        })
 
         Toolbar()
 
@@ -175,9 +190,9 @@ fun FullHeightBottomSheet(
                         .height(BOTTOM_ELEMENT_HEIGHT_DP)
                         .width(350.dp)
                         .scale(headerScale)
-                        .zIndex(5f)
+                        .zIndex(BOTTOM_ELEMENT_Z_INDEX)
                 )
-                body()
+                body(modifier = Modifier.zIndex(BODY_Z_INDEX))
             }
         }
     }
@@ -190,9 +205,8 @@ fun Toolbar() {
             .fillMaxWidth()
             .height(with(LocalDensity.current) { TOOLBAR_HEIGHT_PX.toDp() })
             .offset(y = with(LocalDensity.current) { TOOLBAR_MARGIN_TOP_PX.toDp() })
-            .zIndex(1f)
-            .border(2.dp, Color.Red)
-        ,
+            .zIndex(TOOLBAR_Z_INDEX)
+            .border(2.dp, Color.Red),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Left element
@@ -212,6 +226,16 @@ fun Toolbar() {
     }
 }
 
+@Composable
+fun TopCurtain(modifier: Modifier) {
+    Box(
+        modifier
+            .fillMaxWidth()
+            .height(with(LocalDensity.current) { TOP_CURTAIN_HEIGHT_PX.toDp() })
+            .zIndex(TOP_CURTAIN_Z_INDEX)
+            .background(Color.White)
+    )
+}
 
 @Preview
 @Composable
@@ -224,7 +248,7 @@ fun SheetPw() {
             )
         },
         body = {
-            LazyColumn {
+            LazyColumn(modifier = it) {
                 //TODO put inside FullHeightBottomSheet
                 item { Spacer(modifier = Modifier.height(120.dp)) }
 
