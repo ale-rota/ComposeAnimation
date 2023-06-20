@@ -1,5 +1,6 @@
 package com.alerota.composeanimation
 
+import androidx.compose.animation.core.TweenSpec
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Card
@@ -40,6 +43,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -72,9 +76,13 @@ private const val BODY_Z_INDEX = 1f
 @Composable
 fun FullHeightBottomSheet(
     header: @Composable (modifier: Modifier) -> Unit,
-    body: @Composable (modifier: Modifier) -> Unit
+    body: @Composable  (modifier: Modifier, scrollState: LazyListState) -> Unit,
+    scrollState: LazyListState
 ) {
-    val swipeableState = rememberSwipeableState(initialValue = States.COLLAPSED)
+    val swipeableState = rememberSwipeableState(
+        initialValue = States.COLLAPSED,
+        animationSpec = TweenSpec(durationMillis = 600)
+    )
 
     val connection = remember {
         object : NestedScrollConnection {
@@ -83,6 +91,7 @@ fun FullHeightBottomSheet(
                 available: Offset,
                 source: NestedScrollSource
             ): Offset {
+                println("onPreScroll ${available.y}")
                 val delta = available.y
                 return if (delta < 0) {
                     swipeableState.performDrag(delta).toOffset()
@@ -96,9 +105,31 @@ fun FullHeightBottomSheet(
                 available: Offset,
                 source: NestedScrollSource
             ): Offset {
+                println("onPostScroll ${available.y}")
                 val delta = available.y
                 return swipeableState.performDrag(delta).toOffset()
             }
+
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                return if (available.y < 0 &&
+                    scrollState.firstVisibleItemIndex == 0 &&
+                    scrollState.firstVisibleItemScrollOffset == 0
+                ) {
+                    swipeableState.performFling(available.y)
+                    available
+                } else {
+                    Velocity.Zero
+                }
+            }
+
+            override suspend fun onPostFling(
+                consumed: Velocity,
+                available: Velocity
+            ): Velocity {
+                swipeableState.performFling(velocity = available.y)
+                return super.onPostFling(consumed, available)
+            }
+
 
             private fun Float.toOffset() = Offset(0f, this)
         }
@@ -172,7 +203,8 @@ fun FullHeightBottomSheet(
                 body(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.Magenta)
+                        .background(Color.Magenta),
+                    scrollState = scrollState
                 )
             }
         }
@@ -256,6 +288,8 @@ fun TopCurtain(modifier: Modifier, zIndex: Float) {
 @Preview
 @Composable
 fun SheetPw() {
+    val scrollState = rememberLazyListState()
+
     FullHeightBottomSheet(
         header = {
             Box(
@@ -265,8 +299,8 @@ fun SheetPw() {
 
             )
         },
-        body = {
-            LazyColumn(modifier = it) {
+        body = { modifier, lazyListState ->
+            LazyColumn(modifier = modifier, state = lazyListState) {
                 //TODO put inside FullHeightBottomSheet
                 item { Spacer(modifier = Modifier.height(120.dp)) }
 
@@ -290,6 +324,7 @@ fun SheetPw() {
                 }
 
             }
-        }
+        },
+        scrollState = scrollState
     )
 }

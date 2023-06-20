@@ -30,7 +30,6 @@ fun BackgroundImage(
         newMax = 1f,
 
     )
-    println("offset: ${swipeableState.offset.value} -> alpha: ${1-alpha}")
     Box(modifier = modifier) {
         Image(
             painter = painterResource(id = R.drawable.food),
