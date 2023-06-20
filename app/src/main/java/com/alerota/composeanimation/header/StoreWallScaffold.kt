@@ -144,9 +144,8 @@ fun StoreWallScaffold(
             stickyElement = stickyElement
         )
 
-        body(
-            modifier = Modifier
-                .fillMaxWidth()
+        Box(
+            Modifier
                 .swipeable(
                     state = swipeableState,
                     orientation = Orientation.Vertical,
@@ -163,9 +162,15 @@ fun StoreWallScaffold(
                     )
                 }
                 .zIndex(BODY_Z_INDEX)
-                .background(Color.Magenta),
-            scrollState = scrollState
-        )
+        ) {
+            body(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Magenta),
+                scrollState = scrollState
+            )
+
+        }
 
     }
 }
