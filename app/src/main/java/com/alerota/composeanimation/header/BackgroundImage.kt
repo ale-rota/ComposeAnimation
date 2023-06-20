@@ -1,4 +1,4 @@
-package com.alerota.composeanimation
+package com.alerota.composeanimation.header
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,9 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.alerota.composeanimation.header.COLLAPSED_OFFSET_PX
-import com.alerota.composeanimation.header.EXPANDED_OFFSET
-import com.alerota.composeanimation.header.States
+import com.alerota.composeanimation.R
 import com.alerota.composeanimation.util.normalize
 
 @OptIn(ExperimentalMaterialApi::class)

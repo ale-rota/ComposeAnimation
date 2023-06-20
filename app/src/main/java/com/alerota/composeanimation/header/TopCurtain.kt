@@ -12,6 +12,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 
+const val TOP_CURTAIN_HEIGHT_PX = TOOLBAR_MARGIN_TOP_PX + TOOLBAR_HEIGHT_PX + 30
+
 @Composable
 fun TopCurtain(modifier: Modifier, zIndex: Float) {
     Box(

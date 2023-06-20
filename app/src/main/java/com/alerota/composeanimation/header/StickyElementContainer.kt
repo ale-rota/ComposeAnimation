@@ -2,8 +2,6 @@ package com.alerota.composeanimation.header
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.SwipeableState
 import androidx.compose.runtime.Composable
@@ -13,9 +11,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
+
+private const val MIN_SCALE = .7f
+private const val MAX_SCALE = 1f
+
+private const val DRAG_RANGE = COLLAPSED_OFFSET_PX - EXPANDED_OFFSET
+private const val ANIMATION_START_OFFSET = EXPANDED_OFFSET + DRAG_RANGE * 0.3f
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -44,10 +45,7 @@ fun StickyElementContainer(
     ) {
         stickyElement(
             modifier = Modifier
-                .height(with(LocalDensity.current) { BOTTOM_ELEMENT_HEIGHT_PX.toDp() })
-                .width(350.dp)
                 .scale(headerScale)
-                .zIndex(BOTTOM_ELEMENT_Z_INDEX)
         )
     }
 }
