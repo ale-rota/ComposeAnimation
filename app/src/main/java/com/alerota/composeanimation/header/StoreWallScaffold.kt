@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
@@ -48,13 +49,13 @@ private const val BODY_Z_INDEX = 1f
 fun StoreWallScaffold(
     toolbar: @Composable (modifier: Modifier) -> Unit,
     stickyElement: @Composable (modifier: Modifier) -> Unit,
-    body: @Composable (modifier: Modifier) -> Unit,
-    scrollState: LazyListState
+    body: @Composable (modifier: Modifier, scrollState: LazyListState) -> Unit
 ) {
     val swipeableState = rememberSwipeableState(
         initialValue = States.COLLAPSED,
         animationSpec = TweenSpec(durationMillis = 600)
     )
+    val scrollState = rememberLazyListState()
 
     val connection = remember {
         object : NestedScrollConnection {
@@ -160,7 +161,8 @@ fun StoreWallScaffold(
                     )
                 }
                 .zIndex(BODY_Z_INDEX)
-                .background(Color.Magenta)
+                .background(Color.Magenta),
+            scrollState = scrollState
         )
 
     }

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
@@ -32,8 +31,6 @@ import com.alerota.composeanimation.ui.component.Toolbar
 @Preview
 @Composable
 fun SheetPw() {
-    val scrollState = rememberLazyListState()
-
     StoreWallScaffold(
         toolbar = { modifier ->
             Toolbar(
@@ -52,7 +49,7 @@ fun SheetPw() {
                     .background(Color.Green)
             )
         },
-        body = { modifier ->
+        body = { modifier, scrollState ->
             LazyColumn(modifier = modifier, state = scrollState) {
                 item { Spacer(modifier = Modifier.height(120.dp)) }
 
@@ -73,9 +70,7 @@ fun SheetPw() {
                         )
                     }
                 }
-
             }
-        },
-        scrollState = scrollState
+        }
     )
 }
