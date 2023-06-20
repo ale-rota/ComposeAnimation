@@ -44,6 +44,8 @@ private const val TOOLBAR_Z_INDEX = 3f
 private const val TOP_CURTAIN_Z_INDEX = 2f
 private const val BODY_Z_INDEX = 1f
 
+private const val SWIPE_ANIMATION_DURATION_MILLIS = 600
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun StoreWallScaffold(
@@ -53,7 +55,7 @@ fun StoreWallScaffold(
 ) {
     val swipeableState = rememberSwipeableState(
         initialValue = States.COLLAPSED,
-        animationSpec = TweenSpec(durationMillis = 600)
+        animationSpec = TweenSpec(durationMillis = SWIPE_ANIMATION_DURATION_MILLIS)
     )
     val scrollState = rememberLazyListState()
 
