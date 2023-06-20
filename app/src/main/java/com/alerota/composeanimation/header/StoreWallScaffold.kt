@@ -1,11 +1,10 @@
-package com.alerota.composeanimation
+package com.alerota.composeanimation.header
 
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,33 +12,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.SwipeableState
 import androidx.compose.material.Text
 import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -47,6 +38,8 @@ import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.alerota.composeanimation.BackgroundImage
+import com.alerota.composeanimation.ui.component.Toolbar
 import kotlin.math.roundToInt
 
 enum class States {
@@ -54,29 +47,30 @@ enum class States {
     COLLAPSED
 }
 
-private const val TOOLBAR_MARGIN_TOP_PX = 100f
-private const val TOOLBAR_HEIGHT_PX = 140f
-private const val TOP_CURTAIN_HEIGHT_PX = TOOLBAR_MARGIN_TOP_PX + TOOLBAR_HEIGHT_PX + 30
+const val TOOLBAR_MARGIN_TOP_PX = 100f
+const val TOOLBAR_HEIGHT_PX = 140f
+const val TOP_CURTAIN_HEIGHT_PX = TOOLBAR_MARGIN_TOP_PX + TOOLBAR_HEIGHT_PX + 30
 
 const val EXPANDED_OFFSET = TOOLBAR_MARGIN_TOP_PX + TOOLBAR_HEIGHT_PX / 2
 const val COLLAPSED_OFFSET_PX = 800f
 private const val DRAG_RANGE = COLLAPSED_OFFSET_PX - EXPANDED_OFFSET
 const val ANIMATION_START_OFFSET = EXPANDED_OFFSET + DRAG_RANGE * 0.3f
-private const val MIN_SCALE = .7f
-private const val MAX_SCALE = 1f
+const val MIN_SCALE = .7f
+const val MAX_SCALE = 1f
 
-private const val BOTTOM_ELEMENT_HEIGHT_PX = 200f
+const val BOTTOM_ELEMENT_HEIGHT_PX = 200f
 
-private const val BOTTOM_ELEMENT_Z_INDEX = 4f
+const val BOTTOM_ELEMENT_Z_INDEX = 4f
 private const val TOOLBAR_Z_INDEX = 3f
 private const val TOP_CURTAIN_Z_INDEX = 2f
 private const val BODY_Z_INDEX = 1f
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun FullHeightBottomSheet(
-    header: @Composable (modifier: Modifier) -> Unit,
-    body: @Composable  (modifier: Modifier, scrollState: LazyListState) -> Unit,
+fun StoreWallScaffold(
+    toolbar: @Composable () -> Unit,
+    stickyElement: @Composable (modifier: Modifier) -> Unit,
+    body: @Composable (modifier: Modifier, scrollState: LazyListState) -> Unit,
     scrollState: LazyListState
 ) {
     val swipeableState = rememberSwipeableState(
@@ -147,7 +141,7 @@ fun FullHeightBottomSheet(
             zIndex = TOP_CURTAIN_Z_INDEX
         )
 
-        Toolbar(zIndex = TOOLBAR_Z_INDEX)
+        toolbar()
 
         BackgroundImage(
             modifier = Modifier
@@ -167,10 +161,10 @@ fun FullHeightBottomSheet(
                 }
                 .zIndex(BOTTOM_ELEMENT_Z_INDEX)
         ) {
-            SearchBar(
+            StickyElementContainer(
                 modifier = Modifier.zIndex(BOTTOM_ELEMENT_Z_INDEX),
                 swipeableState = swipeableState,
-                header = header
+                stickyElement = stickyElement
             )
         }
 
@@ -211,87 +205,14 @@ fun FullHeightBottomSheet(
     }
 }
 
-@Composable
-fun Toolbar(zIndex: Float) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(with(LocalDensity.current) { TOOLBAR_HEIGHT_PX.toDp() })
-            .offset(y = with(LocalDensity.current) { TOOLBAR_MARGIN_TOP_PX.toDp() })
-            .zIndex(zIndex),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Left element
-        Box {
-            Button(onClick = {}) { Text("Left") }
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Right element
-        Row(
-            modifier = Modifier
-        ) {
-            Button(onClick = {}) { Text("Right") }
-        }
-
-    }
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun SearchBar(
-    modifier: Modifier,
-    swipeableState: SwipeableState<States>,
-    header: @Composable (modifier: Modifier) -> Unit,
-) {
-    val headerScale by remember {
-        derivedStateOf {
-            val currentOffset = swipeableState.offset.value
-            val scale = if (currentOffset < ANIMATION_START_OFFSET) {
-                val oldValueRange = ANIMATION_START_OFFSET - EXPANDED_OFFSET
-                val newValueRange = MAX_SCALE - MIN_SCALE
-                ((currentOffset - EXPANDED_OFFSET) / oldValueRange) * newValueRange + MIN_SCALE
-
-            } else MAX_SCALE
-            return@derivedStateOf scale
-        }
-    }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth(),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        header(
-            modifier = Modifier
-                .height(with(LocalDensity.current) { BOTTOM_ELEMENT_HEIGHT_PX.toDp() })
-                .width(350.dp)
-                .scale(headerScale)
-                .zIndex(BOTTOM_ELEMENT_Z_INDEX)
-        )
-    }
-}
-
-@Composable
-fun TopCurtain(modifier: Modifier, zIndex: Float) {
-    Box(
-        modifier
-            .fillMaxWidth()
-            .height(with(LocalDensity.current) { TOP_CURTAIN_HEIGHT_PX.toDp() })
-            .zIndex(zIndex)
-            .shadow(zIndex.dp)
-            .background(Color.White)
-    )
-}
-
 @Preview
 @Composable
 fun SheetPw() {
     val scrollState = rememberLazyListState()
 
-    FullHeightBottomSheet(
-        header = {
+    StoreWallScaffold(
+        toolbar = { Toolbar(zIndex = TOOLBAR_Z_INDEX) },
+        stickyElement = {
             Box(
                 modifier = it
                     .clip(RoundedCornerShape(36.dp))
@@ -301,7 +222,6 @@ fun SheetPw() {
         },
         body = { modifier, lazyListState ->
             LazyColumn(modifier = modifier, state = lazyListState) {
-                //TODO put inside FullHeightBottomSheet
                 item { Spacer(modifier = Modifier.height(120.dp)) }
 
                 // List items
