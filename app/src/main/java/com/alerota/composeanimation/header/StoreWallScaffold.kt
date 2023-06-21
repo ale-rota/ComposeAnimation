@@ -4,26 +4,41 @@ import androidx.compose.animation.core.TweenSpec
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Text
 import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.alerota.composeanimation.ui.component.Toolbar
 import kotlin.math.roundToInt
 
 enum class States {
@@ -36,8 +51,6 @@ const val TOOLBAR_HEIGHT_PX = 140f
 
 const val EXPANDED_OFFSET = TOOLBAR_MARGIN_TOP_PX + TOOLBAR_HEIGHT_PX / 2
 const val COLLAPSED_OFFSET_PX = 800f
-
-const val STICKY_ELEMENT_HEIGHT_PX = 200f
 
 private const val BOTTOM_ELEMENT_Z_INDEX = 4f
 private const val TOOLBAR_Z_INDEX = 3f
@@ -131,11 +144,11 @@ fun StoreWallScaffold(
 
         StickyElementContainer(
             modifier = Modifier
-                .offset {
-                    IntOffset(
-                        0,
-                        swipeableState.offset.value.roundToInt() - (STICKY_ELEMENT_HEIGHT_PX / 2).roundToInt()
-                    )
+                .layout { measurable, constraints ->
+                    val placeable = measurable.measure(constraints)
+                    layout(placeable.width, placeable.height) {
+                        placeable.place(0, swipeableState.offset.value.roundToInt() - placeable.height / 2)
+                    }
                 }
                 .zIndex(BOTTOM_ELEMENT_Z_INDEX),
             swipeableState = swipeableState,
@@ -173,4 +186,50 @@ fun StoreWallScaffold(
     }
 }
 
+@Preview
+@Composable
+fun SheetPw() {
+    StoreWallScaffold(
+        toolbar = { modifier ->
+            Toolbar(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .height(with(LocalDensity.current) { TOOLBAR_HEIGHT_PX.toDp() })
+                    .offset(y = with(LocalDensity.current) { TOOLBAR_MARGIN_TOP_PX.toDp() })
+            )
+        },
+        stickyElement = {
+            Box(
+                modifier = it
+                    .height(100.dp)
+                    .width(350.dp)
+                    .clip(RoundedCornerShape(36.dp))
+                    .background(Color.Green)
+            )
+        },
+        body = { modifier, scrollState ->
+            LazyColumn(modifier = modifier, state = scrollState) {
+                item { Spacer(modifier = Modifier.height(120.dp)) }
+
+                items(50) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp, horizontal = 20.dp)
+                            .height(80.dp),
+                        backgroundColor = Color.LightGray,
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text(
+                            text = "Item $it",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxSize(),
+                            fontSize = 20.sp,
+                        )
+                    }
+                }
+            }
+        }
+    )
+}
 
