@@ -66,7 +66,6 @@ fun StoreWallScaffold(
                 available: Offset,
                 source: NestedScrollSource
             ): Offset {
-                println("onPreScroll ${available.y}")
                 val delta = available.y
                 return if (delta < 0) {
                     swipeableState.performDrag(delta).toOffset()
@@ -80,7 +79,6 @@ fun StoreWallScaffold(
                 available: Offset,
                 source: NestedScrollSource
             ): Offset {
-                println("onPostScroll ${available.y}")
                 val delta = available.y
                 return swipeableState.performDrag(delta).toOffset()
             }
@@ -124,7 +122,7 @@ fun StoreWallScaffold(
 
         toolbar(modifier = Modifier.zIndex(TOOLBAR_Z_INDEX))
 
-        BackgroundImage(
+        DynamicOpacityImage(
             modifier = Modifier
                 .height(400.dp)
                 .fillMaxWidth(),
