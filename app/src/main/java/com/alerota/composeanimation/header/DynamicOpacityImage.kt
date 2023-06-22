@@ -28,11 +28,11 @@ private const val MAX_OPACITY = 1f
 fun DynamicOpacityImage(
     modifier: Modifier,
     swipeableState: SwipeableState<States>,
-    collapsedOffsetPx: Float
+    expandedOffsetPx: Float
 ) {
     val opacity = swipeableState.offset.value.coerceAtLeast(MIN_OFFSET).normalize(
         oldMin = MIN_OFFSET,
-        oldMax = collapsedOffsetPx,
+        oldMax = expandedOffsetPx,
         newMin = MIN_OPACITY,
         newMax = MAX_OPACITY,
     )
@@ -58,10 +58,10 @@ fun DynamicOpacityImage(
 @Preview(showBackground = true)
 @Composable
 fun DarkOpacityImageLayoutPreview() {
-    val swipeableState = rememberSwipeableState(initialValue = States.COLLAPSED)
+    val swipeableState = rememberSwipeableState(initialValue = States.EXPANDED)
     DynamicOpacityImage(
         modifier = Modifier.height(300.dp),
         swipeableState = swipeableState,
-        collapsedOffsetPx = 800f
+        expandedOffsetPx = 800f
     )
 }

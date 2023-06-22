@@ -42,8 +42,8 @@ import com.alerota.composeanimation.ui.component.Toolbar
 import kotlin.math.roundToInt
 
 enum class States {
-    EXPANDED,
-    COLLAPSED
+    COLLAPSED,
+    EXPANDED
 }
 
 private val IMAGE_HEIGHT_DP = 290.dp
@@ -61,18 +61,21 @@ private enum class SlotsEnum {
     TopCurtain,
     StickyElement,
     Body,
-    Image
+    Image,
+    InfoBlock
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun StoreWallScaffold(
+    title: String,
+    subLine: String,
     toolbar: @Composable () -> Unit,
     stickyElement: @Composable (modifier: Modifier) -> Unit,
     body: @Composable (modifier: Modifier, scrollState: LazyListState) -> Unit
 ) {
     val swipeableState = rememberSwipeableState(
-        initialValue = States.COLLAPSED,
+        initialValue = States.EXPANDED,
         animationSpec = TweenSpec(durationMillis = SWIPE_ANIMATION_DURATION_MILLIS)
     )
     val scrollState = rememberLazyListState()
@@ -136,6 +139,7 @@ fun StoreWallScaffold(
         }
 
         val collapsedOffsetPx = TOOLBAR_TOP_MARGIN_DP.roundToPx() + toolbarHeight / 2
+        val expandedOffsetPx = IMAGE_HEIGHT_DP.toPx()
 
         val topCurtainPlaceables = subcompose(SlotsEnum.TopCurtain) {
             TopCurtain(
@@ -157,7 +161,17 @@ fun StoreWallScaffold(
                     .height(IMAGE_HEIGHT_DP)
                     .fillMaxWidth(),
                 swipeableState = swipeableState,
-                collapsedOffsetPx = IMAGE_HEIGHT_DP.toPx(),
+                expandedOffsetPx = expandedOffsetPx,
+            )
+        }.map { it.measure(constraints) }
+
+        val infoBlockPlaceables = subcompose(SlotsEnum.InfoBlock) {
+            InfoBlock(
+                title = title,
+                subLine = subLine,
+                swipeableState = swipeableState,
+                collapsedOffsetPx = collapsedOffsetPx.toFloat(),
+                expandedOffsetPx = expandedOffsetPx
             )
         }.map { it.measure(constraints) }
 
@@ -177,7 +191,7 @@ fun StoreWallScaffold(
                     swipeableState = swipeableState,
                     stickyElement = stickyElement,
                     collapsedOffsetPx = collapsedOffsetPx.toFloat(),
-                    expandedOffsetPx = IMAGE_HEIGHT_DP.toPx(),
+                    expandedOffsetPx = expandedOffsetPx,
                 )
             }
         }.map { it.measure(constraints) }
@@ -189,8 +203,8 @@ fun StoreWallScaffold(
                         state = swipeableState,
                         orientation = Orientation.Vertical,
                         anchors = mapOf(
-                            collapsedOffsetPx.toFloat() to States.EXPANDED,
-                            IMAGE_HEIGHT_DP.toPx() to States.COLLAPSED,
+                            collapsedOffsetPx.toFloat() to States.COLLAPSED,
+                            expandedOffsetPx to States.EXPANDED,
                         )
                     )
                     .nestedScroll(connection)
@@ -216,6 +230,12 @@ fun StoreWallScaffold(
             }
             topCurtainPlaceables.forEach { it.placeRelative(0, 0, TOP_CURTAIN_Z_INDEX) }
             imagePlaceables.forEach { it.placeRelative(0, 0) }
+            infoBlockPlaceables.forEach {
+                it.placeRelative(
+                    x = 12.dp.roundToPx(),
+                    y = TOOLBAR_TOP_MARGIN_DP.roundToPx() + toolbarHeight + 30
+                )
+            }
             stickyElementPlaceables.forEach { it.placeRelative(0, 0, STICKY_ELEMENT_Z_INDEX) }
             bodyPlaceables.forEach {
                 it.placeRelative(
@@ -238,6 +258,8 @@ fun SheetPw() {
             .background(Color.White)
     ) {
         StoreWallScaffold(
+            title = "Groceries",
+            subLine = "Get your orders delivered in minutes!",
             toolbar = {
                 Toolbar(
                     modifier = Modifier
