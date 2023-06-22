@@ -6,3 +6,7 @@ fun Float.normalize(oldMin: Float, oldMax: Float, newMin: Float, newMax: Float):
     val newValueRange = newMax - newMin
     return ((initial - oldMin) / oldValueRange) * newValueRange + newMin
 }
+
+fun Float.accelerate(min: Float, max: Float): Float {
+    return (this*this).coerceAtLeast(min).coerceAtMost(max)
+}

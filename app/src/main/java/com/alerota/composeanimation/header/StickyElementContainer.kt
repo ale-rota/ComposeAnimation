@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import com.alerota.composeanimation.util.accelerate
 import com.alerota.composeanimation.util.normalize
 
 private const val MIN_SCALE = .7f
@@ -38,7 +39,7 @@ fun StickyElementContainer(
                     oldMax = animationStartOffset,
                     newMin = MIN_SCALE,
                     newMax = MAX_SCALE
-                )
+                ).accelerate(MIN_SCALE, MAX_SCALE)
             } else MAX_SCALE
             return@derivedStateOf scale
         }
