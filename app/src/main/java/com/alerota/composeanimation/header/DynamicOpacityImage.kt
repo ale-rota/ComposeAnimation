@@ -43,7 +43,7 @@ fun DynamicOpacityImage(
             painter = painterResource(id = R.drawable.food),
             contentDescription = "Your Image",
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Fit,
+            contentScale = ContentScale.Crop,
             alignment = Alignment.BottomEnd
         )
         Box(
