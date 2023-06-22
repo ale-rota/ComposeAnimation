@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import com.alerota.composeanimation.util.normalize
 
 private const val MIN_SCALE = .7f
 private const val MAX_SCALE = 1f
@@ -21,7 +22,7 @@ private const val MAX_SCALE = 1f
 fun StickyElementContainer(
     modifier: Modifier,
     swipeableState: SwipeableState<States>,
-    stickyElement: @Composable (modifier: Modifier) -> Unit,
+    stickyElement: @Composable () -> Unit,
     collapsedOffsetPx: Float,
     expandedOffsetPx: Float
 ) {
@@ -30,11 +31,14 @@ fun StickyElementContainer(
     val headerScale by remember {
         derivedStateOf {
             val currentOffset = swipeableState.offset.value
-            val scale = if (currentOffset < animationStartOffset) {
-                val oldValueRange = animationStartOffset - collapsedOffsetPx
-                val newValueRange = MAX_SCALE - MIN_SCALE
-                ((currentOffset - collapsedOffsetPx) / oldValueRange) * newValueRange + MIN_SCALE
 
+            val scale = if (currentOffset < animationStartOffset) {
+                currentOffset.normalize(
+                    oldMin = collapsedOffsetPx,
+                    oldMax = animationStartOffset,
+                    newMin = MIN_SCALE,
+                    newMax = MAX_SCALE
+                )
             } else MAX_SCALE
             return@derivedStateOf scale
         }
@@ -42,12 +46,10 @@ fun StickyElementContainer(
 
     Box(
         modifier = modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .scale(headerScale),
         contentAlignment = Alignment.TopCenter
     ) {
-        stickyElement(
-            modifier = Modifier
-                .scale(headerScale)
-        )
+        stickyElement()
     }
 }

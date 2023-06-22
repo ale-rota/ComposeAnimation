@@ -15,17 +15,15 @@ private const val BOTTOM_PADDING_PX = 30
 
 @Composable
 fun TopCurtain(
-    modifier: Modifier,
-    zIndex: Float,
     toolbarMarginTopPx: Int,
     toolbarHeightPx: Int
 ) {
     val topCurtainHeightPx = toolbarMarginTopPx + toolbarHeightPx + BOTTOM_PADDING_PX
     Box(
-        modifier
+        Modifier
             .fillMaxWidth()
             .height(with(LocalDensity.current) { topCurtainHeightPx.toDp() })
-            .shadow(zIndex.dp)
+            .shadow(10.dp)
             .background(Color.White)
     )
 }

@@ -2,7 +2,7 @@ package com.alerota.composeanimation.header
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.SwipeableState
@@ -31,11 +31,9 @@ fun OpacityLayer(
         newMin = MIN_OPACITY,
         newMax = MAX_OPACITY,
     )
-    println("offset=${swipeableState.offset.value}  -> opacity=$opacity")
 
     Box(
         modifier = modifier
-            .fillMaxSize()
             .background(Color.Black.copy(alpha = 1f - opacity))
     )
 }
@@ -46,7 +44,7 @@ fun OpacityLayer(
 fun OpacityLayerPreview() {
     val swipeableState = rememberSwipeableState(initialValue = States.EXPANDED)
     OpacityLayer(
-        modifier = Modifier.height(300.dp),
+        modifier = Modifier.height(300.dp).fillMaxWidth(),
         swipeableState = swipeableState,
         expandedOffsetPx = 800f
     )

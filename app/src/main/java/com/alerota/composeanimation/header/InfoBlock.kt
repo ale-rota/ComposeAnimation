@@ -40,7 +40,6 @@ fun InfoBlock(
         newMin = MIN_SCALE,
         newMax = MAX_SCALE,
     )
-    println("aaa min=$collapsedOffsetPx max=$expandedOffsetPx offset=${swipeableState.offset.value}  -> scale=$scale")
 
     Column(
         modifier = modifier

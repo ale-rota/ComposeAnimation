@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,7 +37,6 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -78,8 +76,8 @@ fun StoreWallScaffold(
     title: String,
     subLine: String,
     toolbar: @Composable () -> Unit,
-    stickyElement: @Composable (modifier: Modifier) -> Unit,
-    body: @Composable (modifier: Modifier, scrollState: LazyListState) -> Unit
+    stickyElement: @Composable () -> Unit,
+    body: @Composable (scrollState: LazyListState) -> Unit
 ) {
     val swipeableState = rememberSwipeableState(
         initialValue = States.EXPANDED,
@@ -150,13 +148,6 @@ fun StoreWallScaffold(
 
         val topCurtainPlaceables = subcompose(SlotsEnum.TopCurtain) {
             TopCurtain(
-                modifier = Modifier.offset {
-                    IntOffset(
-                        0,
-                        -swipeableState.offset.value.roundToInt() + collapsedOffsetPx
-                    )
-                },
-                zIndex = TOP_CURTAIN_Z_INDEX,
                 toolbarMarginTopPx = TOOLBAR_TOP_MARGIN_DP.roundToPx(),
                 toolbarHeightPx = toolbarHeight,
             )
@@ -165,7 +156,7 @@ fun StoreWallScaffold(
         val imagePlaceables = subcompose(SlotsEnum.Image) {
             Image(
                 painter = painterResource(id = R.drawable.food),
-                contentDescription = "Your Image",
+                contentDescription = "",
                 modifier = Modifier
                     .height(IMAGE_HEIGHT_DP)
                     .fillMaxWidth(),
@@ -228,16 +219,9 @@ fun StoreWallScaffold(
                     )
                     .nestedScroll(connection)
             ) {
-                body(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.Magenta),
-                    scrollState = scrollState
-                )
-
+                body(scrollState = scrollState)
             }
         }.map { it.measure(constraints) }
-
 
         layout(0, 0) {
             toolbarPlaceables.forEach {
@@ -247,7 +231,13 @@ fun StoreWallScaffold(
                     zIndex = TOOLBAR_Z_INDEX
                 )
             }
-            topCurtainPlaceables.forEach { it.placeRelative(0, 0, TOP_CURTAIN_Z_INDEX) }
+            topCurtainPlaceables.forEach {
+                it.placeRelative(
+                    x = 0,
+                    y = -swipeableState.offset.value.roundToInt() + collapsedOffsetPx,
+                    zIndex = TOP_CURTAIN_Z_INDEX
+                )
+            }
             imagePlaceables.forEach { it.placeRelative(0, 0) }
             opacityLayerPlaceables.forEach { it.placeRelative(0, 0, OPACITY_LAYER_Z_INDEX) }
             infoBlockPlaceables.forEach {
@@ -289,15 +279,19 @@ fun SheetPw() {
             },
             stickyElement = {
                 Box(
-                    modifier = it
+                    modifier = Modifier
                         .height(50.dp)
                         .width(350.dp)
                         .clip(RoundedCornerShape(36.dp))
                         .background(Color.Green)
                 )
             },
-            body = { modifier, scrollState ->
-                LazyColumn(modifier = modifier, state = scrollState) {
+            body = { scrollState ->
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.Magenta), state = scrollState
+                ) {
                     item { Spacer(modifier = Modifier.height(120.dp)) }
 
                     items(50) {
@@ -321,6 +315,5 @@ fun SheetPw() {
             }
         )
     }
-
 }
 
