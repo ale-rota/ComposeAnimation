@@ -11,14 +11,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 
-private const val BOTTOM_PADDING_PX = 30
+private val BOTTOM_PADDING_DP = 10.dp
 
 @Composable
 fun TopCurtain(
     toolbarMarginTopPx: Int,
     toolbarHeightPx: Int
 ) {
-    val topCurtainHeightPx = toolbarMarginTopPx + toolbarHeightPx + BOTTOM_PADDING_PX
+    val topCurtainHeightPx = toolbarMarginTopPx + toolbarHeightPx + BOTTOM_PADDING_DP.value
     Box(
         Modifier
             .fillMaxWidth()
