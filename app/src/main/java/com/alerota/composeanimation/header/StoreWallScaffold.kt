@@ -1,6 +1,7 @@
 package com.alerota.composeanimation.header
 
 import androidx.compose.animation.core.TweenSpec
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,7 @@ import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -30,14 +32,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.alerota.composeanimation.R
 import com.alerota.composeanimation.ui.component.Toolbar
 import kotlin.math.roundToInt
 
@@ -49,10 +54,11 @@ enum class States {
 private val IMAGE_HEIGHT_DP = 290.dp
 private val TOOLBAR_TOP_MARGIN_DP = 20.dp
 
-private const val STICKY_ELEMENT_Z_INDEX = 4f
-private const val TOOLBAR_Z_INDEX = 3f
-private const val TOP_CURTAIN_Z_INDEX = 2f
-private const val BODY_Z_INDEX = 1f
+private const val STICKY_ELEMENT_Z_INDEX = 5f
+private const val TOOLBAR_Z_INDEX = 4f
+private const val TOP_CURTAIN_Z_INDEX = 3f
+private const val BODY_Z_INDEX = 2f
+private const val OPACITY_LAYER_Z_INDEX = 1f
 
 private const val SWIPE_ANIMATION_DURATION_MILLIS = 600
 
@@ -62,6 +68,7 @@ private enum class SlotsEnum {
     StickyElement,
     Body,
     Image,
+    OpacityLayer,
     InfoBlock
 }
 
@@ -156,12 +163,24 @@ fun StoreWallScaffold(
         }.map { it.measure(constraints) }
 
         val imagePlaceables = subcompose(SlotsEnum.Image) {
-            DynamicOpacityImage(
+            Image(
+                painter = painterResource(id = R.drawable.food),
+                contentDescription = "Your Image",
+                modifier = Modifier
+                    .height(IMAGE_HEIGHT_DP)
+                    .fillMaxWidth(),
+                contentScale = ContentScale.Crop,
+                alignment = Alignment.BottomEnd
+            )
+        }.map { it.measure(constraints) }
+
+        val opacityLayerPlaceables = subcompose(SlotsEnum.OpacityLayer) {
+            OpacityLayer(
                 modifier = Modifier
                     .height(IMAGE_HEIGHT_DP)
                     .fillMaxWidth(),
                 swipeableState = swipeableState,
-                expandedOffsetPx = expandedOffsetPx,
+                expandedOffsetPx = expandedOffsetPx
             )
         }.map { it.measure(constraints) }
 
@@ -230,6 +249,7 @@ fun StoreWallScaffold(
             }
             topCurtainPlaceables.forEach { it.placeRelative(0, 0, TOP_CURTAIN_Z_INDEX) }
             imagePlaceables.forEach { it.placeRelative(0, 0) }
+            opacityLayerPlaceables.forEach { it.placeRelative(0, 0, OPACITY_LAYER_Z_INDEX) }
             infoBlockPlaceables.forEach {
                 it.placeRelative(
                     x = 12.dp.roundToPx(),
