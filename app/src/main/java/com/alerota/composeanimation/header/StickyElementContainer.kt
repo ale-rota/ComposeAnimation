@@ -15,8 +15,6 @@ import androidx.compose.ui.draw.scale
 private const val MIN_SCALE = .7f
 private const val MAX_SCALE = 1f
 
-private const val DRAG_RANGE = COLLAPSED_OFFSET_PX - EXPANDED_OFFSET
-private const val ANIMATION_START_OFFSET = EXPANDED_OFFSET + DRAG_RANGE * 0.3f
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -24,14 +22,18 @@ fun StickyElementContainer(
     modifier: Modifier,
     swipeableState: SwipeableState<States>,
     stickyElement: @Composable (modifier: Modifier) -> Unit,
+    expandedOffset: Float,
+    collapsedOffsetPx: Float
 ) {
+    val dragRange = collapsedOffsetPx - expandedOffset
+    val animationStartOffset = expandedOffset + dragRange * 0.3f
     val headerScale by remember {
         derivedStateOf {
             val currentOffset = swipeableState.offset.value
-            val scale = if (currentOffset < ANIMATION_START_OFFSET) {
-                val oldValueRange = ANIMATION_START_OFFSET - EXPANDED_OFFSET
+            val scale = if (currentOffset < animationStartOffset) {
+                val oldValueRange = animationStartOffset - expandedOffset
                 val newValueRange = MAX_SCALE - MIN_SCALE
-                ((currentOffset - EXPANDED_OFFSET) / oldValueRange) * newValueRange + MIN_SCALE
+                ((currentOffset - expandedOffset) / oldValueRange) * newValueRange + MIN_SCALE
 
             } else MAX_SCALE
             return@derivedStateOf scale

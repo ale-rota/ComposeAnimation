@@ -10,17 +10,19 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
-
-const val TOP_CURTAIN_HEIGHT_PX = TOOLBAR_MARGIN_TOP_PX + TOOLBAR_HEIGHT_PX + 30
 
 @Composable
-fun TopCurtain(modifier: Modifier, zIndex: Float) {
+fun TopCurtain(
+    modifier: Modifier,
+    zIndex: Float,
+    toolbarMarginTopPx: Int,
+    toolbarHeightPx: Int
+) {
+    val topCurtainHeightPx = toolbarMarginTopPx + toolbarHeightPx + 30
     Box(
         modifier
             .fillMaxWidth()
-            .height(with(LocalDensity.current) { TOP_CURTAIN_HEIGHT_PX.toDp() })
-            .zIndex(zIndex)
+            .height(with(LocalDensity.current) { topCurtainHeightPx.toDp() })
             .shadow(zIndex.dp)
             .background(Color.White)
     )

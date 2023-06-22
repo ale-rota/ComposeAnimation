@@ -4,6 +4,7 @@ import androidx.compose.animation.core.TweenSpec
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,15 +30,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import com.alerota.composeanimation.ui.component.Toolbar
 import kotlin.math.roundToInt
 
@@ -46,18 +46,22 @@ enum class States {
     COLLAPSED
 }
 
-const val TOOLBAR_MARGIN_TOP_PX = 100f
-const val TOOLBAR_HEIGHT_PX = 140f
+private val IMAGE_HEIGHT_DP = 290.dp
 
-const val EXPANDED_OFFSET = TOOLBAR_MARGIN_TOP_PX + TOOLBAR_HEIGHT_PX / 2
-const val COLLAPSED_OFFSET_PX = 800f
-
-private const val BOTTOM_ELEMENT_Z_INDEX = 4f
+private const val STICKY_ELEMENT_Z_INDEX = 4f
 private const val TOOLBAR_Z_INDEX = 3f
 private const val TOP_CURTAIN_Z_INDEX = 2f
 private const val BODY_Z_INDEX = 1f
 
 private const val SWIPE_ANIMATION_DURATION_MILLIS = 600
+
+private enum class SlotsEnum {
+    Toolbar,
+    TopCurtain,
+    StickyElement,
+    Body,
+    Image
+}
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -120,116 +124,155 @@ fun StoreWallScaffold(
             private fun Float.toOffset() = Offset(0f, this)
         }
     }
+    
+    SubcomposeLayout { constraints ->
+        val toolbarPlaceables = subcompose(SlotsEnum.Toolbar) {
+            Box(Modifier) {
+                toolbar(modifier = Modifier)
+            }
+        }.map { it.measure(constraints) }
 
-    Box {
-
-        TopCurtain(
-            modifier = Modifier.offset {
-                IntOffset(
-                    0,
-                    -swipeableState.offset.value.roundToInt() + EXPANDED_OFFSET.roundToInt()
-                )
-            },
-            zIndex = TOP_CURTAIN_Z_INDEX
-        )
-
-        toolbar(modifier = Modifier.zIndex(TOOLBAR_Z_INDEX))
-
-        DynamicOpacityImage(
-            modifier = Modifier
-                .height(400.dp)
-                .fillMaxWidth(),
-            swipeableState = swipeableState
-        )
-
-        StickyElementContainer(
-            modifier = Modifier
-                .layout { measurable, constraints ->
-                    val placeable = measurable.measure(constraints)
-                    layout(placeable.width, placeable.height) {
-                        placeable.place(0, swipeableState.offset.value.roundToInt() - placeable.height / 2)
-                    }
-                }
-                .zIndex(BOTTOM_ELEMENT_Z_INDEX),
-            swipeableState = swipeableState,
-            stickyElement = stickyElement
-        )
-
-        Box(
-            Modifier
-                .swipeable(
-                    state = swipeableState,
-                    orientation = Orientation.Vertical,
-                    anchors = mapOf(
-                        EXPANDED_OFFSET to States.EXPANDED,
-                        COLLAPSED_OFFSET_PX to States.COLLAPSED,
-                    )
-                )
-                .nestedScroll(connection)
-                .offset {
-                    IntOffset(
-                        0,
-                        swipeableState.offset.value.roundToInt()
-                    )
-                }
-                .zIndex(BODY_Z_INDEX)
-        ) {
-            body(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.Magenta),
-                scrollState = scrollState
-            )
-
+        val toolbarHeight = toolbarPlaceables.fold(0) { currentMax, placeable ->
+            maxOf(currentMax, placeable.height)
         }
 
+        val expandedOffset = 0 + toolbarHeight / 2
+
+        val topCurtainPlaceables = subcompose(SlotsEnum.TopCurtain) {
+            TopCurtain(
+                modifier = Modifier.offset {
+                    IntOffset(
+                        0,
+                        -swipeableState.offset.value.roundToInt() + expandedOffset
+                    )
+                },
+                zIndex = TOP_CURTAIN_Z_INDEX,
+                toolbarMarginTopPx = 0,
+                toolbarHeightPx = toolbarHeight,
+            )
+        }.map { it.measure(constraints) }
+
+        val imagePlaceables = subcompose(SlotsEnum.Image) {
+            DynamicOpacityImage(
+                modifier = Modifier
+                    .height(IMAGE_HEIGHT_DP)
+                    .fillMaxWidth(),
+                swipeableState = swipeableState, 
+                collapsedOffsetPx = IMAGE_HEIGHT_DP.toPx(),
+            )
+        }.map { it.measure(constraints) }
+
+        val stickyElementPlaceables = subcompose(SlotsEnum.StickyElement) {
+            Box(Modifier) {
+                StickyElementContainer(
+                    modifier = Modifier
+                        .layout { measurable, constraints ->
+                            val placeable = measurable.measure(constraints)
+                            layout(placeable.width, placeable.height) {
+                                placeable.place(
+                                    0,
+                                    swipeableState.offset.value.roundToInt() - placeable.height / 2
+                                )
+                            }
+                        },
+                    swipeableState = swipeableState,
+                    stickyElement = stickyElement,
+                    expandedOffset = expandedOffset.toFloat(),
+                    collapsedOffsetPx = IMAGE_HEIGHT_DP.toPx(),
+                )
+            }
+        }.map { it.measure(constraints) }
+
+        val bodyPlaceables = subcompose(SlotsEnum.Body) {
+            Box(
+                Modifier
+                    .swipeable(
+                        state = swipeableState,
+                        orientation = Orientation.Vertical,
+                        anchors = mapOf(
+                            expandedOffset.toFloat() to States.EXPANDED,
+                            IMAGE_HEIGHT_DP.toPx() to States.COLLAPSED,
+                        )
+                    )
+                    .nestedScroll(connection)
+            ) {
+                body(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.Magenta),
+                    scrollState = scrollState
+                )
+
+            }
+        }.map { it.measure(constraints) }
+
+
+        layout(0, 0) {
+            toolbarPlaceables.forEach { it.placeRelative(0, 0, TOOLBAR_Z_INDEX) }
+            topCurtainPlaceables.forEach { it.placeRelative(0, 0, TOP_CURTAIN_Z_INDEX) }
+            imagePlaceables.forEach { it.placeRelative(0, 0) }
+            stickyElementPlaceables.forEach { it.placeRelative(0, 0, STICKY_ELEMENT_Z_INDEX) }
+            bodyPlaceables.forEach { it.placeRelative(
+                0,
+                swipeableState.offset.value.roundToInt(),
+                BODY_Z_INDEX
+            ) }
+        }
     }
+
 }
 
 @Preview
 @Composable
 fun SheetPw() {
-    StoreWallScaffold(
-        toolbar = { modifier ->
-            Toolbar(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .height(with(LocalDensity.current) { TOOLBAR_HEIGHT_PX.toDp() })
-                    .offset(y = with(LocalDensity.current) { TOOLBAR_MARGIN_TOP_PX.toDp() })
-            )
-        },
-        stickyElement = {
-            Box(
-                modifier = it
-                    .height(100.dp)
-                    .width(350.dp)
-                    .clip(RoundedCornerShape(36.dp))
-                    .background(Color.Green)
-            )
-        },
-        body = { modifier, scrollState ->
-            LazyColumn(modifier = modifier, state = scrollState) {
-                item { Spacer(modifier = Modifier.height(120.dp)) }
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        StoreWallScaffold(
+            toolbar = { modifier ->
+                Toolbar(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .height(70.dp)
+                        .offset(y = 0.dp)
+                )
+            },
+            stickyElement = {
+                Box(
+                    modifier = it
+                        .height(50.dp)
+                        .width(350.dp)
+                        .clip(RoundedCornerShape(36.dp))
+                        .background(Color.Green)
+                )
+            },
+            body = { modifier, scrollState ->
+                LazyColumn(modifier = modifier, state = scrollState) {
+                    item { Spacer(modifier = Modifier.height(120.dp)) }
 
-                items(50) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp, horizontal = 20.dp)
-                            .height(80.dp),
-                        backgroundColor = Color.LightGray,
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text(
-                            text = "Item $it",
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxSize(),
-                            fontSize = 20.sp,
-                        )
+                    items(50) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp, horizontal = 20.dp)
+                                .height(80.dp),
+                            backgroundColor = Color.LightGray,
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text(
+                                text = "Item $it",
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxSize(),
+                                fontSize = 20.sp,
+                            )
+                        }
                     }
                 }
             }
-        }
-    )
+        )
+    }
+
 }
 
