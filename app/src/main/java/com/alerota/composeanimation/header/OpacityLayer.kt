@@ -18,6 +18,10 @@ private const val MIN_OFFSET = 450f
 private const val MIN_OPACITY = .4f
 private const val MAX_OPACITY = 1f
 
+/**
+ * Opacity layer.
+ * The opacity changes according to the [swipeableState] value.
+ */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun OpacityLayer(

@@ -72,11 +72,33 @@ private enum class SlotsEnum {
     InfoBlock
 }
 
+/**
+ * A scaffold containing the elements of the Store Wall.
+ * It can scroll from [States.EXPANDED] to [States.COLLAPSED].
+ * When swiping up, the [body] is initially dragged up until the [stickyElement] on top of it
+ * reaches the [toolbar] position. From that moment the drag is interrupted and the scroll event
+ * is consumed by the scrollable element inside the [body].
+ *
+ * @param title title of the Store Wall.
+ * @param subLine short description of the Store Wall.
+ * @param backgroundImage image placed as background.
+ * @param toolbar horizontal set of UI elements shown on top of the composition.
+ * @param stickyElement UI element shown on top of the bottom scrolling part (body). When swiping
+ * up with the finger, the [stickyElement] moves up together with the [body], until it reaches
+ * the y position of the [toolbar]. In that moment it stops moving and starts acting as a sticky
+ * element. During the scroll, it also shrinks, so it can fit the empty space between the lateral
+ * elements of the [toolbar].
+ * @param body bottom scrolling UI element of the composition. It generally contains a
+ * scrollable element (e.g. [LazyColumn]). When swiping up with the finger, it's initially dragged up. When it reaches
+ * the [States.COLLAPSED] position, it stops being dragged up and the internal scrollable element
+ * starts scrolling instead.
+ */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun StoreWallScaffold(
     title: String,
     subLine: String,
+    backgroundImage: String,
     toolbar: @Composable () -> Unit,
     stickyElement: @Composable () -> Unit,
     body: @Composable (scrollState: LazyListState, offset: Int) -> Unit
@@ -87,6 +109,8 @@ fun StoreWallScaffold(
     )
     val scrollState = rememberLazyListState()
 
+     // Manages how much of the scroll offset must be consumed for dragging and how much for
+     // scrolling.
     val connection = remember {
         object : NestedScrollConnection {
 
@@ -149,10 +173,8 @@ fun StoreWallScaffold(
         val expandedOffsetPx = IMAGE_HEIGHT_DP.toPx()
 
         val topCurtainPlaceables = subcompose(SlotsEnum.TopCurtain) {
-            TopCurtain(
-                toolbarMarginTopPx = TOOLBAR_TOP_MARGIN_DP.roundToPx(),
-                toolbarHeightPx = toolbarHeight,
-            )
+            // When in collapsed position, the curtain height completely covers the toolbar
+            TopCurtain(height = TOOLBAR_TOP_MARGIN_DP + toolbarHeight.toDp())
         }.map { it.measure(constraints) }
 
         val imagePlaceables = subcompose(SlotsEnum.Image) {
@@ -272,6 +294,7 @@ fun SheetPw() {
         StoreWallScaffold(
             title = "Groceries",
             subLine = "Get your orders delivered in minutes!",
+            backgroundImage = "",
             toolbar = {
                 Toolbar(
                     modifier = Modifier

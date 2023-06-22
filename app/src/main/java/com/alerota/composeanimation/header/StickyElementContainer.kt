@@ -17,7 +17,10 @@ import com.alerota.composeanimation.util.normalize
 private const val MIN_SCALE = .7f
 private const val MAX_SCALE = 1f
 
-
+/**
+ * Container for the sticky element of the [StoreWallScaffold].
+ * It scales with an accelerated animation according to the value of [swipeableState].
+ */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun StickyElementContainer(

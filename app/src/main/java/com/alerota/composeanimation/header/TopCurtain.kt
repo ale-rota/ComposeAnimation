@@ -8,21 +8,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-private val BOTTOM_PADDING_DP = 10.dp
+private val BOTTOM_PADDING_DP = 6.dp
 
 @Composable
-fun TopCurtain(
-    toolbarMarginTopPx: Int,
-    toolbarHeightPx: Int
-) {
-    val topCurtainHeightPx = toolbarMarginTopPx + toolbarHeightPx + BOTTOM_PADDING_DP.value
+fun TopCurtain(height: Dp) {
+    val topCurtainHeight = height + BOTTOM_PADDING_DP
     Box(
         Modifier
             .fillMaxWidth()
-            .height(with(LocalDensity.current) { topCurtainHeightPx.toDp() })
+            .height(topCurtainHeight)
             .shadow(10.dp)
             .background(Color.White)
     )

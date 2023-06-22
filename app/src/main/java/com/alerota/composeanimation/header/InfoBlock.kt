@@ -23,6 +23,10 @@ private const val MIN_OFFSET = 450f
 private const val MIN_SCALE = .9f
 private const val MAX_SCALE = 1f
 
+/**
+ * Small block composed by a [title] and a [subLine].
+ * It shrinks according to the [swipeableState] value.
+ */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun InfoBlock(
