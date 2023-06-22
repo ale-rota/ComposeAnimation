@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,6 +35,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -77,7 +79,7 @@ fun StoreWallScaffold(
     subLine: String,
     toolbar: @Composable () -> Unit,
     stickyElement: @Composable () -> Unit,
-    body: @Composable (scrollState: LazyListState) -> Unit
+    body: @Composable (scrollState: LazyListState, offset: Int) -> Unit
 ) {
     val swipeableState = rememberSwipeableState(
         initialValue = States.EXPANDED,
@@ -219,7 +221,7 @@ fun StoreWallScaffold(
                     )
                     .nestedScroll(connection)
             ) {
-                body(scrollState = scrollState)
+                body(scrollState = scrollState, offset = swipeableState.offset.value.roundToInt())
             }
         }.map { it.measure(constraints) }
 
@@ -286,13 +288,16 @@ fun SheetPw() {
                         .background(Color.Green)
                 )
             },
-            body = { scrollState ->
+            body = { scrollState, bottomPadding ->
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.Magenta), state = scrollState
+                        .background(Color.Magenta), state = scrollState,
+                    contentPadding = PaddingValues(
+                        bottom = with(LocalDensity.current) { bottomPadding.toDp() }
+                    )
                 ) {
-                    item { Spacer(modifier = Modifier.height(120.dp)) }
+                    item { Spacer(modifier = Modifier.height(60.dp)) }
 
                     items(50) {
                         Card(
