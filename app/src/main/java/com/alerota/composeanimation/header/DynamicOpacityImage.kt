@@ -4,7 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.SwipeableState
 import androidx.compose.material.rememberSwipeableState
@@ -60,7 +60,7 @@ fun DynamicOpacityImage(
 fun DarkOpacityImageLayoutPreview() {
     val swipeableState = rememberSwipeableState(initialValue = States.COLLAPSED)
     DynamicOpacityImage(
-        modifier = Modifier.size(400.dp),
+        modifier = Modifier.height(300.dp),
         swipeableState = swipeableState,
         collapsedOffsetPx = 800f
     )

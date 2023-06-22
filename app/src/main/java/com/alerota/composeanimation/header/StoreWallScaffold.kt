@@ -47,6 +47,7 @@ enum class States {
 }
 
 private val IMAGE_HEIGHT_DP = 290.dp
+private val TOOLBAR_TOP_MARGIN_DP = 20.dp
 
 private const val STICKY_ELEMENT_Z_INDEX = 4f
 private const val TOOLBAR_Z_INDEX = 3f
@@ -66,7 +67,7 @@ private enum class SlotsEnum {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun StoreWallScaffold(
-    toolbar: @Composable (modifier: Modifier) -> Unit,
+    toolbar: @Composable () -> Unit,
     stickyElement: @Composable (modifier: Modifier) -> Unit,
     body: @Composable (modifier: Modifier, scrollState: LazyListState) -> Unit
 ) {
@@ -124,30 +125,28 @@ fun StoreWallScaffold(
             private fun Float.toOffset() = Offset(0f, this)
         }
     }
-    
+
     SubcomposeLayout { constraints ->
         val toolbarPlaceables = subcompose(SlotsEnum.Toolbar) {
-            Box(Modifier) {
-                toolbar(modifier = Modifier)
-            }
+            toolbar()
         }.map { it.measure(constraints) }
 
         val toolbarHeight = toolbarPlaceables.fold(0) { currentMax, placeable ->
             maxOf(currentMax, placeable.height)
         }
 
-        val expandedOffset = 0 + toolbarHeight / 2
+        val collapsedOffsetPx = TOOLBAR_TOP_MARGIN_DP.roundToPx() + toolbarHeight / 2
 
         val topCurtainPlaceables = subcompose(SlotsEnum.TopCurtain) {
             TopCurtain(
                 modifier = Modifier.offset {
                     IntOffset(
                         0,
-                        -swipeableState.offset.value.roundToInt() + expandedOffset
+                        -swipeableState.offset.value.roundToInt() + collapsedOffsetPx
                     )
                 },
                 zIndex = TOP_CURTAIN_Z_INDEX,
-                toolbarMarginTopPx = 0,
+                toolbarMarginTopPx = TOOLBAR_TOP_MARGIN_DP.roundToPx(),
                 toolbarHeightPx = toolbarHeight,
             )
         }.map { it.measure(constraints) }
@@ -157,7 +156,7 @@ fun StoreWallScaffold(
                 modifier = Modifier
                     .height(IMAGE_HEIGHT_DP)
                     .fillMaxWidth(),
-                swipeableState = swipeableState, 
+                swipeableState = swipeableState,
                 collapsedOffsetPx = IMAGE_HEIGHT_DP.toPx(),
             )
         }.map { it.measure(constraints) }
@@ -177,8 +176,8 @@ fun StoreWallScaffold(
                         },
                     swipeableState = swipeableState,
                     stickyElement = stickyElement,
-                    expandedOffset = expandedOffset.toFloat(),
-                    collapsedOffsetPx = IMAGE_HEIGHT_DP.toPx(),
+                    collapsedOffsetPx = collapsedOffsetPx.toFloat(),
+                    expandedOffsetPx = IMAGE_HEIGHT_DP.toPx(),
                 )
             }
         }.map { it.measure(constraints) }
@@ -190,7 +189,7 @@ fun StoreWallScaffold(
                         state = swipeableState,
                         orientation = Orientation.Vertical,
                         anchors = mapOf(
-                            expandedOffset.toFloat() to States.EXPANDED,
+                            collapsedOffsetPx.toFloat() to States.EXPANDED,
                             IMAGE_HEIGHT_DP.toPx() to States.COLLAPSED,
                         )
                     )
@@ -208,15 +207,23 @@ fun StoreWallScaffold(
 
 
         layout(0, 0) {
-            toolbarPlaceables.forEach { it.placeRelative(0, 0, TOOLBAR_Z_INDEX) }
+            toolbarPlaceables.forEach {
+                it.placeRelative(
+                    x = 0,
+                    y = TOOLBAR_TOP_MARGIN_DP.roundToPx(),
+                    zIndex = TOOLBAR_Z_INDEX
+                )
+            }
             topCurtainPlaceables.forEach { it.placeRelative(0, 0, TOP_CURTAIN_Z_INDEX) }
             imagePlaceables.forEach { it.placeRelative(0, 0) }
             stickyElementPlaceables.forEach { it.placeRelative(0, 0, STICKY_ELEMENT_Z_INDEX) }
-            bodyPlaceables.forEach { it.placeRelative(
-                0,
-                swipeableState.offset.value.roundToInt(),
-                BODY_Z_INDEX
-            ) }
+            bodyPlaceables.forEach {
+                it.placeRelative(
+                    x = 0,
+                    y = swipeableState.offset.value.roundToInt(),
+                    zIndex = BODY_Z_INDEX
+                )
+            }
         }
     }
 
@@ -231,12 +238,11 @@ fun SheetPw() {
             .background(Color.White)
     ) {
         StoreWallScaffold(
-            toolbar = { modifier ->
+            toolbar = {
                 Toolbar(
-                    modifier = modifier
+                    modifier = Modifier
                         .fillMaxWidth()
                         .height(70.dp)
-                        .offset(y = 0.dp)
                 )
             },
             stickyElement = {

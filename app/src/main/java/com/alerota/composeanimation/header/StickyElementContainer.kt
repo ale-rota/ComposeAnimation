@@ -22,18 +22,18 @@ fun StickyElementContainer(
     modifier: Modifier,
     swipeableState: SwipeableState<States>,
     stickyElement: @Composable (modifier: Modifier) -> Unit,
-    expandedOffset: Float,
-    collapsedOffsetPx: Float
+    collapsedOffsetPx: Float,
+    expandedOffsetPx: Float
 ) {
-    val dragRange = collapsedOffsetPx - expandedOffset
-    val animationStartOffset = expandedOffset + dragRange * 0.3f
+    val dragRange = expandedOffsetPx - collapsedOffsetPx
+    val animationStartOffset = collapsedOffsetPx + dragRange * 0.3f
     val headerScale by remember {
         derivedStateOf {
             val currentOffset = swipeableState.offset.value
             val scale = if (currentOffset < animationStartOffset) {
-                val oldValueRange = animationStartOffset - expandedOffset
+                val oldValueRange = animationStartOffset - collapsedOffsetPx
                 val newValueRange = MAX_SCALE - MIN_SCALE
-                ((currentOffset - expandedOffset) / oldValueRange) * newValueRange + MIN_SCALE
+                ((currentOffset - collapsedOffsetPx) / oldValueRange) * newValueRange + MIN_SCALE
 
             } else MAX_SCALE
             return@derivedStateOf scale
