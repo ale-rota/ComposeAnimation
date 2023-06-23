@@ -4,6 +4,7 @@ import androidx.compose.animation.core.TweenSpec
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,8 +15,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
@@ -101,16 +104,16 @@ fun StoreWallScaffold(
     backgroundImage: String,
     toolbar: @Composable () -> Unit,
     stickyElement: @Composable () -> Unit,
-    body: @Composable (scrollState: LazyListState, offset: Int) -> Unit
+    body: @Composable (scrollState: LazyGridState, offset: Int) -> Unit
 ) {
     val swipeableState = rememberSwipeableState(
         initialValue = States.EXPANDED,
         animationSpec = TweenSpec(durationMillis = SWIPE_ANIMATION_DURATION_MILLIS)
     )
-    val scrollState = rememberLazyListState()
+    val scrollState = rememberLazyGridState()
 
-     // Manages how much of the scroll offset must be consumed for dragging and how much for
-     // scrolling.
+    // Manages how much of the scroll offset must be consumed for dragging and how much for
+    // scrolling.
     val connection = remember {
         object : NestedScrollConnection {
 
@@ -312,10 +315,14 @@ fun SheetPw() {
                 )
             },
             body = { scrollState, bottomPadding ->
-                LazyColumn(
+                LazyVerticalGrid(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.Magenta), state = scrollState,
+                        .background(Color.Magenta),
+                    state = scrollState,
+                    columns = GridCells.Fixed(1),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(
                         bottom = with(LocalDensity.current) { bottomPadding.toDp() }
                     )
