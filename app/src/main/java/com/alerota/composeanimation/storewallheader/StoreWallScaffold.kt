@@ -1,0 +1,298 @@
+package com.alerota.composeanimation.storewallheader
+
+import androidx.compose.animation.core.TweenSpec
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.SwipeableState
+import androidx.compose.material.Text
+import androidx.compose.material.rememberSwipeableState
+import androidx.compose.material.swipeable
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.alerota.composeanimation.ui.SlotsEnum
+import com.alerota.composeanimation.ui.States
+import com.alerota.composeanimation.ui.SwipeableNestedScrollConnection
+import com.alerota.composeanimation.ui.theme.Spacings
+import com.alerota.composeanimation.util.normalize
+import kotlin.math.roundToInt
+
+internal val IMAGE_HEIGHT_DP = 290.dp
+internal val TOOLBAR_TOP_MARGIN_DP = 7.dp
+internal val TOP_CURTAIN_BOTTOM_PADDING_DP = 6.dp
+internal const val TOP_CURTAIN_EXTRA_OFFSET_PX = 20f
+
+private const val STICKY_ELEMENT_Z_INDEX = 5f
+private const val TOOLBAR_Z_INDEX = 4f
+private const val TOP_CURTAIN_Z_INDEX = 3f
+private const val BODY_Z_INDEX = 2f
+private const val OPACITY_LAYER_Z_INDEX = 1f
+
+private val toolbarStartElement = Spacings.spaceS
+
+private const val SWIPE_ANIMATION_DURATION_MILLIS = 600
+
+/**
+ * A scaffold containing the elements of the Store Wall.
+ * It can scroll from [States.EXPANDED] to [States.COLLAPSED].
+ * When swiping up, the [body] is initially dragged up until the [stickyElement] on top of it
+ * reaches the [StoreWallHeaderUiModel.Content.toolbar] position. From that moment the drag is interrupted and the scroll event
+ * is consumed by the scrollable element inside the [body].
+ *
+ * @param header Store Wall header state description
+ * @param stickyElement UI element shown on top of the bottom scrolling part (body). When swiping
+ * up with the finger, the [stickyElement] moves up together with the [body], until it reaches
+ * the y position of the [StoreWallHeaderUiModel.Content.toolbar]. In that moment it stops moving and starts acting as a sticky
+ * element. During the scroll, it also shrinks, so it can fit the empty space between the lateral
+ * elements of the [StoreWallHeaderUiModel.Content.toolbar].
+ * @param body bottom scrolling UI element of the composition. It generally contains a
+ * scrollable element (e.g. [LazyColumn]). When swiping up with the finger, it's initially dragged up. When it reaches
+ * the [States.COLLAPSED] position, it stops being dragged up and the internal scrollable element
+ * starts scrolling instead.
+ */
+@Suppress("LongMethod")
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+internal fun StoreWallScaffold(
+    body: @Composable (swipeableState: SwipeableState<States>, scrollState: LazyListState, offset: Int) -> Unit,
+) {
+    val swipeableState: SwipeableState<States> = rememberSwipeableState(
+        initialValue = States.EXPANDED,
+        animationSpec = TweenSpec(durationMillis = SWIPE_ANIMATION_DURATION_MILLIS)
+    )
+    val scrollState = rememberLazyListState()
+
+    val connection = remember {
+        SwipeableNestedScrollConnection(
+            swipeableState = swipeableState
+        )
+    }
+
+    val statusBarHeightInPx: Int = WindowInsets.statusBars.getTop(LocalDensity.current)
+
+    SubcomposeLayout { constraints ->
+        val expandedOffset = IMAGE_HEIGHT_DP
+        val stickyElementHorizontalMargins = Spacings.spaceM
+
+        val startToolbarElementPlaceables = subcompose(SlotsEnum.StartToolbarElement) {
+            Text(
+                modifier = Modifier
+                    .height(52.dp)
+                    .background(Color.Magenta),
+                text = "Start element",
+            )
+        }
+            .map { it.measure(constraints) }
+
+        val endToolbarElementPlaceables =
+            subcompose(SlotsEnum.EndToolbarElement) {
+                Text(
+                    modifier = Modifier
+                        .height(52.dp)
+                        .background(Color.Magenta),
+                    text = "End element",
+                )
+            }
+                .map { it.measure(constraints) }
+
+        val toolbarHeight: Int =
+            startToolbarElementPlaceables.plus(endToolbarElementPlaceables)
+                .maxByOrNull { it.height }?.height ?: 0
+
+        val collapsedOffsetPx =
+            statusBarHeightInPx + TOOLBAR_TOP_MARGIN_DP.roundToPx() + toolbarHeight / 2
+
+        val opacityLayerPlaceables = subcompose(SlotsEnum.OpacityLayer) {
+            val expandedOffsetPx = LocalDensity.current.run { expandedOffset.toPx() }
+            OpacityLayer(
+                modifier = Modifier
+                    .height(expandedOffset)
+                    .fillMaxWidth(),
+                swipeableState = swipeableState,
+                collapsedOffsetPx = collapsedOffsetPx.toFloat(),
+                expandedOffsetPx = expandedOffsetPx
+            )
+        }
+            .map { it.measure(constraints) }
+
+        val stickyElementPlaceables = subcompose(SlotsEnum.StickyElement) {
+            // x start and end of the central element (empty space if there's no element)
+            val xCentralElementStart = toolbarStartElement.roundToPx() +
+                    (startToolbarElementPlaceables.firstOrNull()?.width ?: 0)
+            val xCentralElementEnd = constraints.maxWidth -
+                    toolbarStartElement.roundToPx() -
+                    (endToolbarElementPlaceables.firstOrNull()?.width ?: 0)
+
+            val yOffset = statusBarHeightInPx +
+                    toPx(TOOLBAR_TOP_MARGIN_DP) +
+                    toolbarHeight
+
+            StickyElementContainer(
+                arguments = StickyElementContainerArguments(
+                    swipeableState = swipeableState,
+                    horizontalMargins = stickyElementHorizontalMargins,
+                    xStart = xCentralElementStart,
+                    xEnd = xCentralElementEnd,
+                    screenWidth = constraints.maxWidth,
+                    dragRange = expandedOffset.toPx() -
+                            (statusBarHeightInPx + toPx(TOOLBAR_TOP_MARGIN_DP) + toolbarHeight),
+                    yOffset = yOffset,
+                ),
+                stickyElement = {
+                    Box(Modifier
+                        .width(300.dp)
+                        .height(200.dp)
+                        .background(Color.Red)
+                    )
+                },
+            )
+        }
+            .map { it.measure(constraints) }
+
+        val bodyPlaceables = subcompose(SlotsEnum.Body) {
+            Box(
+                Modifier
+                    .swipeable(
+                        state = swipeableState,
+                        orientation = Orientation.Vertical,
+                        anchors = mapOf(
+                            collapsedOffsetPx.toFloat() to States.COLLAPSED,
+                            expandedOffset.toPx() to States.EXPANDED,
+                        )
+                    )
+                    .nestedScroll(connection)
+            ) {
+                body(
+                    swipeableState,
+                    scrollState,
+                    swipeableState.offset.value.roundToInt()
+                )
+            }
+        }
+            .map { it.measure(constraints) }
+
+        val headerBackgroundPlaceables = subcompose(SlotsEnum.HeaderBackground) {
+            Box(
+                modifier = Modifier
+                    .height(expandedOffset)
+                    .fillMaxWidth()
+                    .background(Color.Green)
+            )
+        }
+            .map { it.measure(constraints) }
+
+        layout(0, 0) {
+            startToolbarElementPlaceables.forEach {
+                it.placeRelative(
+                    x = toolbarStartElement.roundToPx(),
+                    y = statusBarHeightInPx + TOOLBAR_TOP_MARGIN_DP.roundToPx(),
+                    zIndex = TOOLBAR_Z_INDEX
+                )
+            }
+
+            endToolbarElementPlaceables.forEach {
+                it.placeRelative(
+                    x = constraints.maxWidth - it.width - toolbarStartElement.roundToPx(),
+                    y = statusBarHeightInPx + TOOLBAR_TOP_MARGIN_DP.roundToPx(),
+                    zIndex = TOOLBAR_Z_INDEX
+                )
+            }
+
+            val topCurtainHeightPx = statusBarHeightInPx +
+                    TOOLBAR_TOP_MARGIN_DP.roundToPx() +
+                    toolbarHeight +
+                    TOP_CURTAIN_BOTTOM_PADDING_DP.roundToPx()
+            val topCurtainPlaceables = subcompose(SlotsEnum.TopCurtain) {
+                // When in collapsed position, the curtain height completely covers the toolbar
+                TopCurtain(height = topCurtainHeightPx.toDp())
+            }.map { it.measure(constraints) }
+            topCurtainPlaceables.forEach {
+                it.placeRelative(
+                    x = 0,
+                    y = -swipeableState.offset.value.normalize(
+                        oldMin = collapsedOffsetPx.toFloat(),
+                        oldMax = expandedOffset.roundToPx().toFloat(),
+                        newMin = 0f,
+                        newMax = topCurtainHeightPx.toFloat() + TOP_CURTAIN_EXTRA_OFFSET_PX
+                    ).toInt(),
+                    zIndex = TOP_CURTAIN_Z_INDEX
+                )
+            }
+
+            headerBackgroundPlaceables
+                .forEach { it.placeRelative(0, 0) }
+
+            opacityLayerPlaceables
+                .forEach { it.placeRelative(0, 0, OPACITY_LAYER_Z_INDEX) }
+
+            stickyElementPlaceables.forEach { it.placeRelative(0, 0, STICKY_ELEMENT_Z_INDEX) }
+
+            bodyPlaceables.forEach {
+                it.placeRelative(
+                    x = 0,
+                    y = swipeableState.offset.value.roundToInt(),
+                    zIndex = BODY_Z_INDEX
+                )
+            }
+        }
+    }
+
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Preview
+@Composable
+internal fun SheetPreview() {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        StoreWallScaffold { _, scrollState, bottomPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Yellow),
+                state = scrollState,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(
+                    bottom = with(LocalDensity.current) { bottomPadding.toDp() }
+                )
+            ) {
+                item { Spacer(modifier = Modifier.height(60.dp)) }
+
+                items(50) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .background(Color.Gray)
+                    ) {
+                        Text(text = "Item $it")
+                    }
+                }
+            }
+        }
+    }
+}

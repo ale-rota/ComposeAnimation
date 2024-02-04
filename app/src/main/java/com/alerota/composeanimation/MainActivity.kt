@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
-import com.alerota.composeanimation.header.SheetPw
+import com.alerota.composeanimation.storewallheader.SheetPreview
 import com.alerota.composeanimation.ui.theme.ComposeAnimationTheme
 
 class MainActivity : ComponentActivity() {
@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    SheetPw()
+                    SheetPreview()
                 }
             }
         }
