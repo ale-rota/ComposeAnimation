@@ -12,9 +12,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun TopCurtain(height: Dp) {
+fun TopCurtain(
+    height: Dp,
+    modifier: Modifier = Modifier
+) {
     Box(
-        Modifier
+        modifier
             .fillMaxWidth()
             .height(height)
             .shadow(10.dp)

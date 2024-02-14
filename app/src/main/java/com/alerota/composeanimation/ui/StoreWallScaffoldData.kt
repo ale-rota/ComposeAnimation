@@ -9,9 +9,7 @@ enum class SlotsEnum {
     StartToolbarElement,
     EndToolbarElement,
     TopCurtain,
-    StickyElement,
+    SearchBar,
     Body,
-    HeaderBackground,
-    OpacityLayer,
-    InfoBlock
+    HeaderBackground
 }

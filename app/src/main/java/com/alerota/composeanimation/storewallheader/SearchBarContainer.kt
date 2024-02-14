@@ -16,26 +16,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.alerota.composeanimation.ui.States
-import com.alerota.composeanimation.ui.theme.Spacings
+import com.alerota.composeanimation.util.CENTRAL_ELEMENT_COLLAPSED_HEIGHT_DP
+import com.alerota.composeanimation.util.CENTRAL_ELEMENT_EXPANDED_HEIGHT_DP
+import com.alerota.composeanimation.util.END_ANIMATION_PERCENTAGE
+import com.alerota.composeanimation.util.MAX_SCALE
+import com.alerota.composeanimation.util.START_ANIMATION_PERCENTAGE
+import com.alerota.composeanimation.util.centralElementLateralMargin
 import com.alerota.composeanimation.util.normalize
 import kotlin.math.roundToInt
 
-private val centralElementLateralMargin = Spacings.spaceS
 
-// Percentage of drag range during which scale actually changes
-private const val END_ANIMATION_PERCENTAGE = .2f
-private const val START_ANIMATION_PERCENTAGE = .5f
-
-internal val CENTRAL_ELEMENT_COLLAPSED_HEIGHT_DP = 36.dp
-internal val CENTRAL_ELEMENT_EXPANDED_HEIGHT_DP = 48.dp
-
-// Max scale of the sticky element
-private const val MAX_SCALE = 1f
 
 /**
- * Container for the sticky element of the [StoreWallScaffold].
+ * Container for the sticky element of the [AnimationWithSubComposeLayout].
  * When the [swipeableState] value changes - because the user is collapsing/expanding the header, an animation
  * takes place, which does the following:
  * - it moves the sticky element up
@@ -54,7 +48,7 @@ private const val MAX_SCALE = 1f
 @OptIn(ExperimentalMaterialApi::class)
 @Suppress("LongMethod")
 @Composable
-fun StickyElementContainer(
+fun SearchBarContainer(
     arguments: StickyElementContainerArguments,
     stickyElement: @Composable () -> Unit,
 ) {
@@ -117,6 +111,8 @@ fun StickyElementContainer(
             }
 
         }
+
+        println("alerota h=${dimensions.value.horizontalScale} v=${dimensions.value.verticalScale}")
 
         Box(
             modifier = Modifier

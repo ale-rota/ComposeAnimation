@@ -58,28 +58,11 @@ private val toolbarStartElement = Spacings.spaceS
 
 private const val SWIPE_ANIMATION_DURATION_MILLIS = 600
 
-/**
- * A scaffold containing the elements of the Store Wall.
- * It can scroll from [States.EXPANDED] to [States.COLLAPSED].
- * When swiping up, the [body] is initially dragged up until the [stickyElement] on top of it
- * reaches the [StoreWallHeaderUiModel.Content.toolbar] position. From that moment the drag is interrupted and the scroll event
- * is consumed by the scrollable element inside the [body].
- *
- * @param header Store Wall header state description
- * @param stickyElement UI element shown on top of the bottom scrolling part (body). When swiping
- * up with the finger, the [stickyElement] moves up together with the [body], until it reaches
- * the y position of the [StoreWallHeaderUiModel.Content.toolbar]. In that moment it stops moving and starts acting as a sticky
- * element. During the scroll, it also shrinks, so it can fit the empty space between the lateral
- * elements of the [StoreWallHeaderUiModel.Content.toolbar].
- * @param body bottom scrolling UI element of the composition. It generally contains a
- * scrollable element (e.g. [LazyColumn]). When swiping up with the finger, it's initially dragged up. When it reaches
- * the [States.COLLAPSED] position, it stops being dragged up and the internal scrollable element
- * starts scrolling instead.
- */
+
 @Suppress("LongMethod")
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-internal fun StoreWallScaffold(
+internal fun AnimationWithSubComposeLayout(
     body: @Composable (swipeableState: SwipeableState<States>, scrollState: LazyListState, offset: Int) -> Unit,
 ) {
     val swipeableState: SwipeableState<States> = rememberSwipeableState(
@@ -142,7 +125,7 @@ internal fun StoreWallScaffold(
         val collapsedOffsetPx =
             statusBarHeightInPx + TOOLBAR_TOP_MARGIN_DP.roundToPx() + toolbarHeight / 2
 
-        val stickyElementPlaceables = subcompose(SlotsEnum.StickyElement) {
+        val searchBarPlaceables = subcompose(SlotsEnum.SearchBar) {
             // x start and end of the central element (empty space if there's no element)
             val xCentralElementStart = toolbarStartElement.roundToPx() +
                     (startToolbarElementPlaceables.firstOrNull()?.width ?: 0)
@@ -154,7 +137,7 @@ internal fun StoreWallScaffold(
                     toPx(TOOLBAR_TOP_MARGIN_DP) +
                     toolbarHeight
 
-            StickyElementContainer(
+            SearchBarContainer(
                 arguments = StickyElementContainerArguments(
                     swipeableState = swipeableState,
                     horizontalMargins = stickyElementHorizontalMargins,
@@ -262,7 +245,7 @@ internal fun StoreWallScaffold(
             headerBackgroundPlaceables
                 .forEach { it.placeRelative(0, 0) }
 
-            stickyElementPlaceables.forEach { it.placeRelative(0, 0, STICKY_ELEMENT_Z_INDEX) }
+            searchBarPlaceables.forEach { it.placeRelative(0, 0, STICKY_ELEMENT_Z_INDEX) }
 
             bodyPlaceables.forEach {
                 it.placeRelative(
@@ -279,13 +262,13 @@ internal fun StoreWallScaffold(
 @OptIn(ExperimentalMaterialApi::class)
 @Preview
 @Composable
-internal fun SheetPreview() {
+internal fun AnimationWithSubcomposeLayoutPw() {
     Column(
         Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        StoreWallScaffold { _, scrollState, bottomPadding ->
+        AnimationWithSubComposeLayout { _, scrollState, bottomPadding ->
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
