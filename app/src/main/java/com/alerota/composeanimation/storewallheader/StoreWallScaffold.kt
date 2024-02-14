@@ -12,11 +12,13 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.SwipeableState
 import androidx.compose.material.Text
@@ -24,13 +26,17 @@ import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.alerota.composeanimation.ui.SlotsEnum
 import com.alerota.composeanimation.ui.States
 import com.alerota.composeanimation.ui.SwipeableNestedScrollConnection
@@ -47,7 +53,6 @@ private const val STICKY_ELEMENT_Z_INDEX = 5f
 private const val TOOLBAR_Z_INDEX = 4f
 private const val TOP_CURTAIN_Z_INDEX = 3f
 private const val BODY_Z_INDEX = 2f
-private const val OPACITY_LAYER_Z_INDEX = 1f
 
 private val toolbarStartElement = Spacings.spaceS
 
@@ -96,23 +101,37 @@ internal fun StoreWallScaffold(
         val stickyElementHorizontalMargins = Spacings.spaceM
 
         val startToolbarElementPlaceables = subcompose(SlotsEnum.StartToolbarElement) {
-            Text(
+            Box(
                 modifier = Modifier
-                    .height(52.dp)
-                    .background(Color.Magenta),
-                text = "Start element",
-            )
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.Magenta)
+            ) {
+                Text(
+                    modifier = Modifier
+                        .padding(18.dp)
+                        .background(Color.Magenta),
+                    text = "Start",
+                    textAlign = TextAlign.Center
+                )
+            }
         }
             .map { it.measure(constraints) }
 
         val endToolbarElementPlaceables =
             subcompose(SlotsEnum.EndToolbarElement) {
-                Text(
+                Box(
                     modifier = Modifier
-                        .height(52.dp)
-                        .background(Color.Magenta),
-                    text = "End element",
-                )
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.Magenta)
+                ) {
+                    Text(
+                        modifier = Modifier
+                            .padding(18.dp)
+                            .background(Color.Magenta),
+                        text = "End",
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
                 .map { it.measure(constraints) }
 
@@ -122,19 +141,6 @@ internal fun StoreWallScaffold(
 
         val collapsedOffsetPx =
             statusBarHeightInPx + TOOLBAR_TOP_MARGIN_DP.roundToPx() + toolbarHeight / 2
-
-        val opacityLayerPlaceables = subcompose(SlotsEnum.OpacityLayer) {
-            val expandedOffsetPx = LocalDensity.current.run { expandedOffset.toPx() }
-            OpacityLayer(
-                modifier = Modifier
-                    .height(expandedOffset)
-                    .fillMaxWidth(),
-                swipeableState = swipeableState,
-                collapsedOffsetPx = collapsedOffsetPx.toFloat(),
-                expandedOffsetPx = expandedOffsetPx
-            )
-        }
-            .map { it.measure(constraints) }
 
         val stickyElementPlaceables = subcompose(SlotsEnum.StickyElement) {
             // x start and end of the central element (empty space if there's no element)
@@ -163,8 +169,15 @@ internal fun StoreWallScaffold(
                     Box(Modifier
                         .width(300.dp)
                         .height(200.dp)
+                        .clip(RoundedCornerShape(8.dp))
                         .background(Color.Red)
-                    )
+                    ) {
+                        Text(
+                            modifier = Modifier.align(Alignment.Center),
+                            text = "Search bar",
+                            fontSize = 20.sp
+                        )
+                    }
                 },
             )
         }
@@ -198,11 +211,17 @@ internal fun StoreWallScaffold(
                     .height(expandedOffset)
                     .fillMaxWidth()
                     .background(Color.Green)
-            )
+            ) {
+                Text(
+                    modifier = Modifier.align(Alignment.Center),
+                    text = "Header Background",
+                    fontSize = 20.sp
+                )
+            }
         }
             .map { it.measure(constraints) }
 
-        layout(0, 0) {
+        layout(constraints.maxWidth, constraints.maxHeight) {
             startToolbarElementPlaceables.forEach {
                 it.placeRelative(
                     x = toolbarStartElement.roundToPx(),
@@ -242,9 +261,6 @@ internal fun StoreWallScaffold(
 
             headerBackgroundPlaceables
                 .forEach { it.placeRelative(0, 0) }
-
-            opacityLayerPlaceables
-                .forEach { it.placeRelative(0, 0, OPACITY_LAYER_Z_INDEX) }
 
             stickyElementPlaceables.forEach { it.placeRelative(0, 0, STICKY_ELEMENT_Z_INDEX) }
 
@@ -286,10 +302,16 @@ internal fun SheetPreview() {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)
+                            .height(100.dp)
+                            .padding(horizontal = 20.dp)
+                            .clip(RoundedCornerShape(8.dp))
                             .background(Color.Gray)
                     ) {
-                        Text(text = "Item $it")
+                        Text(
+                            modifier = Modifier.align(Alignment.Center),
+                            text = "Item $it",
+                            fontSize = 20.sp
+                        )
                     }
                 }
             }
