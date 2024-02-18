@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,7 +65,12 @@ private val toolbarStartElement = Spacings.spaceS
 private const val SWIPE_ANIMATION_DURATION_MILLIS = 600
 
 
-@Suppress("LongMethod")
+/**
+ * Animation built with [SubcomposeLayout]. It turns out that the [SubcomposeLayout] isn't necessary
+ * in this case because the layout is simple enough to be built with regular [Layout].
+ * In particular, we MEASURE an element based on the measurement of another item, but we never
+ * make any decision on the COMPOSITION an element based on the measurement another element.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun AnimationWithSubComposeLayout(

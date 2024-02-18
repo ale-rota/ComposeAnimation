@@ -64,6 +64,9 @@ private val toolbarElementMargin = Spacings.spaceS
 private const val SWIPE_ANIMATION_DURATION_MILLIS = 600
 
 
+/**
+ * Animation built using only [Layout] composable.
+ */
 @Suppress("LongMethod")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
