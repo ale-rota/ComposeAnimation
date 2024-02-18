@@ -1,4 +1,4 @@
-A simplified version of the New Store Wall animation.
+A simplified version of the New Store Wall animation, entirely realized with Jetpack Compose
 
 It's provided in two versions: one uses `Layout`, the other uses `SubcomposeLayout`.
 
