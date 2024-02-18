@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -35,10 +34,12 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.alerota.composeanimation.storewallheader.elements.BackgroundImage
+import com.alerota.composeanimation.storewallheader.elements.HeaderButton
+import com.alerota.composeanimation.storewallheader.elements.SearchBar
 import com.alerota.composeanimation.ui.SlotsEnum
 import com.alerota.composeanimation.ui.States
 import com.alerota.composeanimation.ui.SwipeableNestedScrollConnection
@@ -55,7 +56,7 @@ private const val TOOLBAR_Z_INDEX = 4f
 private const val TOP_CURTAIN_Z_INDEX = 3f
 private const val BODY_Z_INDEX = 2f
 
-private val toolbarStartElement = Spacings.spaceS
+private val toolbarElementMargin = Spacings.spaceS
 
 private const val SWIPE_ANIMATION_DURATION_MILLIS = 600
 
@@ -64,7 +65,7 @@ private const val SWIPE_ANIMATION_DURATION_MILLIS = 600
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun AnimationWithLayout(
-    body: @Composable (anchoredDraggableState: AnchoredDraggableState<States>, scrollState: LazyListState, offset: Int) -> Unit,
+    body: @Composable (scrollState: LazyListState) -> Unit,
 ) {
     val density = LocalDensity.current
     val anchoredDraggableState: AnchoredDraggableState<States> = remember {
@@ -72,7 +73,7 @@ internal fun AnimationWithLayout(
             initialValue = States.EXPANDED,
             anchors = DraggableAnchors { },
             positionalThreshold = { distance: Float -> distance * 0.5f },
-            velocityThreshold = { with(density) { 100.dp.toPx() }},
+            velocityThreshold = { with(density) { 100.dp.toPx() } },
             animationSpec = TweenSpec(durationMillis = SWIPE_ANIMATION_DURATION_MILLIS)
         )
     }
@@ -91,70 +92,33 @@ internal fun AnimationWithLayout(
     }.toFloat()
 
     val expandedHeight = toPx(CENTRAL_ELEMENT_EXPANDED_HEIGHT_DP).toFloat()
-    val toolbarStartElementPx = with(LocalDensity.current) { toolbarStartElement.toPx() }
+    val toolbarElementMarginPx = with(LocalDensity.current) { toolbarElementMargin.toPx() }
     val toolbarTopMarginPx = toPx(TOOLBAR_TOP_MARGIN_DP)
     val stickyElementHorizontalMarginsPx = toPx(Spacings.spaceM)
-    val screenWidth = with(LocalDensity.current) {LocalConfiguration.current.screenWidthDp.dp.toPx() }
+    val screenWidth =
+        with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val expandedOffset = IMAGE_HEIGHT_DP
     val expandedOffsetPx = with(LocalDensity.current) { expandedOffset.toPx() }
     val centralElementExpandedHeightPx = toPx(CENTRAL_ELEMENT_EXPANDED_HEIGHT_DP).toFloat()
     val centralElementCollapsedHeightPx = toPx(CENTRAL_ELEMENT_COLLAPSED_HEIGHT_DP).toFloat()
     val centralElementLateralMarginPx = toPx(centralElementLateralMargin)
-    val collapsedOffsetPx = statusBarHeightInPx + LocalDensity.current.run { TOOLBAR_TOP_MARGIN_DP.toPx() }
 
     Layout(
         content = {
-            Box(
+            HeaderButton(
                 modifier = Modifier
-                    .layoutId(SlotsEnum.StartToolbarElement)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.Magenta)
-            ) {
-                Text(
-                    modifier = Modifier
-                        .padding(18.dp)
-                        .background(Color.Magenta),
-                    text = "Start",
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .layoutId(SlotsEnum.EndToolbarElement)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.Magenta)
-            ) {
-                Text(
-                    modifier = Modifier
-                        .padding(18.dp)
-                        .background(Color.Magenta),
-                    text = "End",
-                    textAlign = TextAlign.Center
-                )
-            }
-
-
-            Box(Modifier
-                .layoutId(SlotsEnum.SearchBar)
-                .width(300.dp)
-                .height(200.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color.Red)
-            ) {
-                Text(
-                    modifier = Modifier.align(Alignment.Center),
-                    text = "Search bar",
-                    fontSize = 20.sp
-                )
-            }
-
-            anchoredDraggableState.updateAnchors(
-                DraggableAnchors {
-                    States.COLLAPSED at collapsedOffsetPx
-                    States.EXPANDED at expandedOffsetPx
-                }
+                    .layoutId(SlotsEnum.StartToolbarElement),
+                text = "Start"
             )
+
+            HeaderButton(
+                modifier = Modifier
+                    .layoutId(SlotsEnum.EndToolbarElement),
+                text = "End"
+            )
+
+            SearchBar(modifier = Modifier.layoutId(SlotsEnum.SearchBar))
+
             Box(
                 Modifier
                     .layoutId(SlotsEnum.Body)
@@ -164,31 +128,17 @@ internal fun AnimationWithLayout(
                     )
                     .nestedScroll(connection)
             ) {
-                body(
-                    anchoredDraggableState,
-                    scrollState,
-                    anchoredDraggableState.offset.roundToInt()
-                )
+                body(scrollState)
             }
 
-            Box(
+            BackgroundImage(
                 modifier = Modifier
                     .layoutId(SlotsEnum.HeaderBackground)
                     .height(expandedOffset)
                     .fillMaxWidth()
-                    .background(Color.Green)
-            ) {
-                Text(
-                    modifier = Modifier.align(Alignment.Center),
-                    text = "Header Background",
-                    fontSize = 20.sp
-                )
-            }
-
-            TopCurtain(
-                modifier = Modifier.layoutId(SlotsEnum.TopCurtain),
-                height = 0.dp
             )
+
+            TopCurtain(modifier = Modifier.layoutId(SlotsEnum.TopCurtain))
 
         }
     ) { measurables, constraints ->
@@ -200,6 +150,7 @@ internal fun AnimationWithLayout(
             .first { it.layoutId == SlotsEnum.EndToolbarElement }.measure(constraints)
 
 
+        // Toolbar is as tall as the tallest element
         val toolbarHeight: Int =
             listOf(startToolbarElementPlaceables, endToolbarElementPlaceables)
                 .maxByOrNull { it.height }?.height ?: 0
@@ -207,11 +158,18 @@ internal fun AnimationWithLayout(
         val collapsedOffsetPx =
             statusBarHeightInPx + TOOLBAR_TOP_MARGIN_DP.roundToPx() + toolbarHeight / 2
 
+        anchoredDraggableState.updateAnchors(
+            DraggableAnchors {
+                States.COLLAPSED at collapsedOffsetPx.toFloat()
+                States.EXPANDED at expandedOffsetPx
+            }
+        )
+
         // x start and end of the central element (empty space if there's no element)
         val xCentralElementStart =
-            toolbarStartElement.roundToPx() + startToolbarElementPlaceables.width
+            toolbarElementMargin.roundToPx() + startToolbarElementPlaceables.width
         val xCentralElementEnd =
-            constraints.maxWidth - toolbarStartElementPx - endToolbarElementPlaceables.width
+            constraints.maxWidth - toolbarElementMarginPx - endToolbarElementPlaceables.width
 
         val yOffset = statusBarHeightInPx + toolbarTopMarginPx + toolbarHeight
 
@@ -232,7 +190,6 @@ internal fun AnimationWithLayout(
         )
 
 
-        println("alerota h=${dimensions.horizontalScale} v=${dimensions.verticalScale}")
         val searchBarPlaceables = measurables
             .first { it.layoutId == SlotsEnum.SearchBar }.measure(
                 constraints.copy(
@@ -253,6 +210,7 @@ internal fun AnimationWithLayout(
                 TOOLBAR_TOP_MARGIN_DP.roundToPx() +
                 toolbarHeight +
                 TOP_CURTAIN_BOTTOM_PADDING_DP.roundToPx()
+
         val topCurtainPlaceables = measurables
             .first { it.layoutId == SlotsEnum.TopCurtain }.measure(
                 constraints.copy(
@@ -261,16 +219,16 @@ internal fun AnimationWithLayout(
                 )
             )
 
-        layout(0, 0) {
+        layout(constraints.maxWidth, constraints.maxHeight) {
             startToolbarElementPlaceables.placeRelative(
-                x = toolbarStartElement.roundToPx(),
+                x = toolbarElementMargin.roundToPx(),
                 y = statusBarHeightInPx + TOOLBAR_TOP_MARGIN_DP.roundToPx(),
                 zIndex = TOOLBAR_Z_INDEX
             )
 
 
             endToolbarElementPlaceables.placeRelative(
-                x = constraints.maxWidth - endToolbarElementPlaceables.width - toolbarStartElement.roundToPx(),
+                x = constraints.maxWidth - endToolbarElementPlaceables.width - toolbarElementMargin.roundToPx(),
                 y = statusBarHeightInPx + TOOLBAR_TOP_MARGIN_DP.roundToPx(),
                 zIndex = TOOLBAR_Z_INDEX
             )
@@ -306,7 +264,6 @@ internal fun AnimationWithLayout(
 
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 internal fun AnimationWithLayoutPw() {
@@ -315,7 +272,7 @@ internal fun AnimationWithLayoutPw() {
             .fillMaxSize()
             .background(Color.White)
     ) {
-        AnimationWithLayout { _, scrollState, bottomPadding ->
+        AnimationWithLayout { scrollState ->
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -323,7 +280,7 @@ internal fun AnimationWithLayoutPw() {
                 state = scrollState,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(
-                    bottom = with(LocalDensity.current) { bottomPadding.toDp() }
+                    bottom = with(LocalDensity.current) { 250.toDp() }
                 )
             ) {
                 item { Spacer(modifier = Modifier.height(60.dp)) }

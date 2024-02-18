@@ -13,8 +13,8 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun TopCurtain(
-    height: Dp,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    height: Dp = 0.dp,
 ) {
     Box(
         modifier
