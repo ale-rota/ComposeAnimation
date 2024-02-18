@@ -1,8 +1,7 @@
 package com.alerota.composeanimation.ui
 
-import androidx.compose.material.ExperimentalMaterialApi
-//noinspection UsingMaterialAndMaterial3Libraries
-import androidx.compose.material.SwipeableState
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -10,9 +9,9 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 /**
  *  Manages how much of the scroll offset must be consumed for dragging and how much for scrolling.
  */
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 class SwipeableNestedScrollConnection(
-    private val swipeableState: SwipeableState<States>
+    private val anchoredDraggableState: AnchoredDraggableState<States>
 ) : NestedScrollConnection {
 
     override fun onPreScroll(
@@ -21,7 +20,7 @@ class SwipeableNestedScrollConnection(
     ): Offset {
         val delta = available.y
         return if (delta < 0) {
-            swipeableState.performDrag(delta).toOffset()
+            anchoredDraggableState.dispatchRawDelta(delta).toOffset()
         } else {
             Offset.Zero
         }
@@ -33,7 +32,7 @@ class SwipeableNestedScrollConnection(
         source: NestedScrollSource
     ): Offset {
         val delta = available.y
-        return swipeableState.performDrag(delta).toOffset()
+        return anchoredDraggableState.dispatchRawDelta(delta).toOffset()
     }
 
     private fun Float.toOffset() = Offset(0f, this)

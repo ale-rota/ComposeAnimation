@@ -1,8 +1,12 @@
 package com.alerota.composeanimation.storewallheader
 
 import androidx.compose.animation.core.TweenSpec
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.AnchoredDraggableState
+import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,11 +23,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.SwipeableState
 import androidx.compose.material.Text
-import androidx.compose.material.rememberSwipeableState
-import androidx.compose.material.swipeable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -61,20 +61,26 @@ private const val SWIPE_ANIMATION_DURATION_MILLIS = 600
 
 
 @Suppress("LongMethod")
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun AnimationWithLayout(
-    body: @Composable (swipeableState: SwipeableState<States>, scrollState: LazyListState, offset: Int) -> Unit,
+    body: @Composable (anchoredDraggableState: AnchoredDraggableState<States>, scrollState: LazyListState, offset: Int) -> Unit,
 ) {
-    val swipeableState: SwipeableState<States> = rememberSwipeableState(
-        initialValue = States.EXPANDED,
-        animationSpec = TweenSpec(durationMillis = SWIPE_ANIMATION_DURATION_MILLIS)
-    )
+    val density = LocalDensity.current
+    val anchoredDraggableState: AnchoredDraggableState<States> = remember {
+        AnchoredDraggableState(
+            initialValue = States.EXPANDED,
+            anchors = DraggableAnchors { },
+            positionalThreshold = { distance: Float -> distance * 0.5f },
+            velocityThreshold = { with(density) { 100.dp.toPx() }},
+            animationSpec = TweenSpec(durationMillis = SWIPE_ANIMATION_DURATION_MILLIS)
+        )
+    }
     val scrollState = rememberLazyListState()
 
     val connection = remember {
         SwipeableNestedScrollConnection(
-            swipeableState = swipeableState
+            anchoredDraggableState = anchoredDraggableState
         )
     }
 
@@ -143,23 +149,25 @@ internal fun AnimationWithLayout(
                 )
             }
 
+            anchoredDraggableState.updateAnchors(
+                DraggableAnchors {
+                    States.COLLAPSED at collapsedOffsetPx
+                    States.EXPANDED at expandedOffsetPx
+                }
+            )
             Box(
                 Modifier
                     .layoutId(SlotsEnum.Body)
-                    .swipeable(
-                        state = swipeableState,
-                        orientation = Orientation.Vertical,
-                        anchors = mapOf(
-                            collapsedOffsetPx to States.COLLAPSED,
-                            expandedOffsetPx to States.EXPANDED,
-                        )
+                    .anchoredDraggable(
+                        state = anchoredDraggableState,
+                        orientation = Orientation.Vertical
                     )
                     .nestedScroll(connection)
             ) {
                 body(
-                    swipeableState,
+                    anchoredDraggableState,
                     scrollState,
-                    swipeableState.offset.value.roundToInt()
+                    anchoredDraggableState.offset.roundToInt()
                 )
             }
 
@@ -209,7 +217,7 @@ internal fun AnimationWithLayout(
 
         val dimensions = provideDimensions(
             arguments = StickyElementContainerArgumentsV2(
-                swipeableState = swipeableState,
+                anchoredDraggableState = anchoredDraggableState,
                 horizontalMargins = stickyElementHorizontalMarginsPx,
                 xStart = xCentralElementStart,
                 xEnd = xCentralElementEnd.toInt(),
@@ -219,7 +227,7 @@ internal fun AnimationWithLayout(
                 centralElementExpandedHeightPx = centralElementExpandedHeightPx,
                 centralElementCollapsedHeightPx = centralElementCollapsedHeightPx,
                 centralElementLateralMargin = centralElementLateralMarginPx,
-                currentOffset = swipeableState.offset.value
+                currentOffset = anchoredDraggableState.offset
             )
         )
 
@@ -269,7 +277,7 @@ internal fun AnimationWithLayout(
 
             topCurtainPlaceables.placeRelative(
                 x = 0,
-                y = -swipeableState.offset.value.normalize(
+                y = -anchoredDraggableState.offset.normalize(
                     oldMin = collapsedOffsetPx.toFloat(),
                     oldMax = expandedOffset.roundToPx().toFloat(),
                     newMin = 0f,
@@ -283,13 +291,13 @@ internal fun AnimationWithLayout(
 
             searchBarPlaceables.placeRelative(
                 x = dimensions.xCenter - searchBarPlaceables.width / 2,
-                y = swipeableState.offset.value.roundToInt() - searchBarPlaceables.height / 2,
+                y = anchoredDraggableState.offset.roundToInt() - searchBarPlaceables.height / 2,
                 zIndex = STICKY_ELEMENT_Z_INDEX
             )
 
             bodyPlaceables.placeRelative(
                 x = 0,
-                y = swipeableState.offset.value.roundToInt(),
+                y = anchoredDraggableState.offset.roundToInt(),
                 zIndex = BODY_Z_INDEX
             )
 
@@ -298,7 +306,7 @@ internal fun AnimationWithLayout(
 
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 internal fun AnimationWithLayoutPw() {

@@ -1,12 +1,11 @@
 package com.alerota.composeanimation.storewallheader
 
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.SwipeableState
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.AnchoredDraggableState
 import com.alerota.composeanimation.ui.States
 
-@OptIn(ExperimentalMaterialApi::class)
-data class StickyElementContainerArgumentsV2(
-    val swipeableState: SwipeableState<States>,
+data class StickyElementContainerArgumentsV2 @OptIn(ExperimentalFoundationApi::class) constructor(
+    val anchoredDraggableState: AnchoredDraggableState<States>,
     val horizontalMargins: Int,
     val xStart: Int,
     val xEnd: Int,

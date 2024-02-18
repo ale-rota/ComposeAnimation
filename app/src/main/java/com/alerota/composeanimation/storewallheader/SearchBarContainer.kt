@@ -1,12 +1,10 @@
-@file:OptIn(ExperimentalMaterialApi::class)
-
 package com.alerota.composeanimation.storewallheader
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.SwipeableState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
@@ -45,7 +43,7 @@ import kotlin.math.roundToInt
  * @param stickyElement sticky element composable
  *
  */
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Suppress("LongMethod")
 @Composable
 fun SearchBarContainer(
@@ -73,7 +71,7 @@ fun SearchBarContainer(
         // y coordinate where the element stop being shrunk and translated because it can fit the central empty space
         val yMin = yOffset + dragRange * END_ANIMATION_PERCENTAGE
 
-        val currentOffset = swipeableState.offset.value
+        val currentOffset = anchoredDraggableState.offset
         val screenCenter = (screenWidth / 2)
 
         val dimensions: State<Dimensions> = remember(collapsedWidth, currentOffset) {
@@ -124,7 +122,7 @@ fun SearchBarContainer(
                     layout(placeable.width, placeable.height) {
                         placeable.place(
                             x = dimensions.value.xCenter - placeable.width / 2,
-                            y = swipeableState.offset.value.roundToInt() - placeable.height / 2
+                            y = anchoredDraggableState.offset.roundToInt() - placeable.height / 2
                         )
                     }
                 },
@@ -138,8 +136,8 @@ fun SearchBarContainer(
 @Composable
 fun toPx(dp: Dp) = with(LocalDensity.current) { dp.roundToPx() }
 
-class StickyElementContainerArguments(
-    val swipeableState: SwipeableState<States>,
+class StickyElementContainerArguments @OptIn(ExperimentalFoundationApi::class) constructor(
+    val anchoredDraggableState: AnchoredDraggableState<States>,
     val horizontalMargins: Dp,
     val xStart: Int,
     val xEnd: Int,

@@ -1,8 +1,12 @@
 package com.alerota.composeanimation.storewallheader
 
 import androidx.compose.animation.core.TweenSpec
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.AnchoredDraggableState
+import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,11 +23,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.SwipeableState
 import androidx.compose.material.Text
-import androidx.compose.material.rememberSwipeableState
-import androidx.compose.material.swipeable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -60,20 +60,27 @@ private const val SWIPE_ANIMATION_DURATION_MILLIS = 600
 
 
 @Suppress("LongMethod")
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun AnimationWithSubComposeLayout(
-    body: @Composable (swipeableState: SwipeableState<States>, scrollState: LazyListState, offset: Int) -> Unit,
+    body: @Composable (anchoredDraggableState: AnchoredDraggableState<States>, scrollState: LazyListState, offset: Int) -> Unit,
 ) {
-    val swipeableState: SwipeableState<States> = rememberSwipeableState(
-        initialValue = States.EXPANDED,
-        animationSpec = TweenSpec(durationMillis = SWIPE_ANIMATION_DURATION_MILLIS)
-    )
+    val density = LocalDensity.current
+    val anchoredDraggableState: AnchoredDraggableState<States> = remember {
+        AnchoredDraggableState(
+            initialValue = States.EXPANDED,
+            anchors = DraggableAnchors { },
+            positionalThreshold = { distance: Float -> distance * 0.5f },
+            velocityThreshold = { with(density) { 100.dp.toPx() }},
+            animationSpec = TweenSpec(durationMillis = SWIPE_ANIMATION_DURATION_MILLIS)
+        )
+    }
+
     val scrollState = rememberLazyListState()
 
     val connection = remember {
         SwipeableNestedScrollConnection(
-            swipeableState = swipeableState
+            anchoredDraggableState = anchoredDraggableState
         )
     }
 
@@ -139,7 +146,7 @@ internal fun AnimationWithSubComposeLayout(
 
             SearchBarContainer(
                 arguments = StickyElementContainerArguments(
-                    swipeableState = swipeableState,
+                    anchoredDraggableState = anchoredDraggableState,
                     horizontalMargins = stickyElementHorizontalMargins,
                     xStart = xCentralElementStart,
                     xEnd = xCentralElementEnd,
@@ -167,22 +174,24 @@ internal fun AnimationWithSubComposeLayout(
             .map { it.measure(constraints) }
 
         val bodyPlaceables = subcompose(SlotsEnum.Body) {
+            anchoredDraggableState.updateAnchors(
+                DraggableAnchors {
+                    States.COLLAPSED at collapsedOffsetPx.toFloat()
+                    States.EXPANDED at expandedOffset.toPx()
+                }
+            )
             Box(
                 Modifier
-                    .swipeable(
-                        state = swipeableState,
-                        orientation = Orientation.Vertical,
-                        anchors = mapOf(
-                            collapsedOffsetPx.toFloat() to States.COLLAPSED,
-                            expandedOffset.toPx() to States.EXPANDED,
-                        )
+                    .anchoredDraggable(
+                        state = anchoredDraggableState,
+                        orientation = Orientation.Vertical
                     )
                     .nestedScroll(connection)
             ) {
                 body(
-                    swipeableState,
+                    anchoredDraggableState,
                     scrollState,
-                    swipeableState.offset.value.roundToInt()
+                    anchoredDraggableState.offset.roundToInt()
                 )
             }
         }
@@ -232,7 +241,7 @@ internal fun AnimationWithSubComposeLayout(
             topCurtainPlaceables.forEach {
                 it.placeRelative(
                     x = 0,
-                    y = -swipeableState.offset.value.normalize(
+                    y = -anchoredDraggableState.offset.normalize(
                         oldMin = collapsedOffsetPx.toFloat(),
                         oldMax = expandedOffset.roundToPx().toFloat(),
                         newMin = 0f,
@@ -250,7 +259,7 @@ internal fun AnimationWithSubComposeLayout(
             bodyPlaceables.forEach {
                 it.placeRelative(
                     x = 0,
-                    y = swipeableState.offset.value.roundToInt(),
+                    y = anchoredDraggableState.offset.roundToInt(),
                     zIndex = BODY_Z_INDEX
                 )
             }
@@ -259,7 +268,7 @@ internal fun AnimationWithSubComposeLayout(
 
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 internal fun AnimationWithSubcomposeLayoutPw() {
