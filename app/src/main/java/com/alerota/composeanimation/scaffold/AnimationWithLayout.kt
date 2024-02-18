@@ -1,4 +1,4 @@
-package com.alerota.composeanimation.storewallheader
+package com.alerota.composeanimation.scaffold
 
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -37,18 +37,21 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.alerota.composeanimation.storewallheader.elements.BackgroundImage
-import com.alerota.composeanimation.storewallheader.elements.HeaderButton
-import com.alerota.composeanimation.storewallheader.elements.SearchBar
+import com.alerota.composeanimation.scaffold.elements.BackgroundImage
+import com.alerota.composeanimation.scaffold.elements.HeaderButton
+import com.alerota.composeanimation.scaffold.elements.SearchBar
+import com.alerota.composeanimation.scaffold.elements.TopCurtain
+import com.alerota.composeanimation.scaffold.elements.toPx
+import com.alerota.composeanimation.ui.ShrinkableElementArguments
 import com.alerota.composeanimation.ui.SlotsEnum
 import com.alerota.composeanimation.ui.States
 import com.alerota.composeanimation.ui.SwipeableNestedScrollConnection
+import com.alerota.composeanimation.ui.provideDimensions
 import com.alerota.composeanimation.ui.theme.Spacings
 import com.alerota.composeanimation.util.CENTRAL_ELEMENT_COLLAPSED_HEIGHT_DP
 import com.alerota.composeanimation.util.CENTRAL_ELEMENT_EXPANDED_HEIGHT_DP
 import com.alerota.composeanimation.util.centralElementLateralMargin
 import com.alerota.composeanimation.util.normalize
-import com.alerota.composeanimation.util.provideDimensions
 import kotlin.math.roundToInt
 
 private const val STICKY_ELEMENT_Z_INDEX = 5f
@@ -105,6 +108,7 @@ internal fun AnimationWithLayout(
 
     Layout(
         content = {
+
             HeaderButton(
                 modifier = Modifier
                     .layoutId(SlotsEnum.StartToolbarElement),
@@ -174,7 +178,7 @@ internal fun AnimationWithLayout(
         val yOffset = statusBarHeightInPx + toolbarTopMarginPx + toolbarHeight
 
         val dimensions = provideDimensions(
-            arguments = StickyElementContainerArgumentsV2(
+            arguments = ShrinkableElementArguments(
                 anchoredDraggableState = anchoredDraggableState,
                 horizontalMargins = stickyElementHorizontalMarginsPx,
                 xStart = xCentralElementStart,

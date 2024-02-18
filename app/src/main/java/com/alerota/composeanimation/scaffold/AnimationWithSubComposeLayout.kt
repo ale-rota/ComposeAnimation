@@ -1,4 +1,4 @@
-package com.alerota.composeanimation.storewallheader
+package com.alerota.composeanimation.scaffold
 
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -36,7 +35,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.alerota.composeanimation.storewallheader.elements.HeaderButton
+import com.alerota.composeanimation.scaffold.elements.BackgroundImage
+import com.alerota.composeanimation.scaffold.elements.HeaderButton
+import com.alerota.composeanimation.scaffold.elements.SearchBar
+import com.alerota.composeanimation.scaffold.elements.SearchBarContainer
+import com.alerota.composeanimation.scaffold.elements.StickyElementContainerArguments
+import com.alerota.composeanimation.scaffold.elements.TopCurtain
+import com.alerota.composeanimation.scaffold.elements.toPx
 import com.alerota.composeanimation.ui.SlotsEnum
 import com.alerota.composeanimation.ui.States
 import com.alerota.composeanimation.ui.SwipeableNestedScrollConnection
@@ -129,23 +134,9 @@ internal fun AnimationWithSubComposeLayout(
                             (statusBarHeightInPx + toPx(TOOLBAR_TOP_MARGIN_DP) + toolbarHeight),
                     yOffset = yOffset,
                 ),
-                stickyElement = {
-                    Box(Modifier
-                        .width(300.dp)
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.Red)
-                    ) {
-                        Text(
-                            modifier = Modifier.align(Alignment.Center),
-                            text = "Search bar",
-                            fontSize = 20.sp
-                        )
-                    }
-                },
+                stickyElement = { SearchBar(modifier = Modifier) },
             )
-        }
-            .map { it.measure(constraints) }
+        }.map { it.measure(constraints) }
 
         val bodyPlaceables = subcompose(SlotsEnum.Body) {
             anchoredDraggableState.updateAnchors(
@@ -172,22 +163,16 @@ internal fun AnimationWithSubComposeLayout(
             .map { it.measure(constraints) }
 
         val headerBackgroundPlaceables = subcompose(SlotsEnum.HeaderBackground) {
-            Box(
+            BackgroundImage(
                 modifier = Modifier
                     .height(expandedOffset)
                     .fillMaxWidth()
-                    .background(Color.Green)
-            ) {
-                Text(
-                    modifier = Modifier.align(Alignment.Center),
-                    text = "Header Background",
-                    fontSize = 20.sp
-                )
-            }
+            )
         }
             .map { it.measure(constraints) }
 
         layout(constraints.maxWidth, constraints.maxHeight) {
+
             startToolbarElementPlaceables.forEach {
                 it.placeRelative(
                     x = toolbarStartElement.roundToPx(),
@@ -225,8 +210,7 @@ internal fun AnimationWithSubComposeLayout(
                 )
             }
 
-            headerBackgroundPlaceables
-                .forEach { it.placeRelative(0, 0) }
+            headerBackgroundPlaceables.forEach { it.placeRelative(0, 0) }
 
             searchBarPlaceables.forEach { it.placeRelative(0, 0, STICKY_ELEMENT_Z_INDEX) }
 

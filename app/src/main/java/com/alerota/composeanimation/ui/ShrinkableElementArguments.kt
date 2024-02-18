@@ -1,10 +1,9 @@
-package com.alerota.composeanimation.storewallheader
+package com.alerota.composeanimation.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.AnchoredDraggableState
-import com.alerota.composeanimation.ui.States
 
-data class StickyElementContainerArgumentsV2 @OptIn(ExperimentalFoundationApi::class) constructor(
+data class ShrinkableElementArguments @OptIn(ExperimentalFoundationApi::class) constructor(
     val anchoredDraggableState: AnchoredDraggableState<States>,
     val horizontalMargins: Int,
     val xStart: Int,

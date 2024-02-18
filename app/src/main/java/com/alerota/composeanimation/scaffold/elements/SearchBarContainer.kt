@@ -1,4 +1,4 @@
-package com.alerota.composeanimation.storewallheader
+package com.alerota.composeanimation.scaffold.elements
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.AnchoredDraggableState

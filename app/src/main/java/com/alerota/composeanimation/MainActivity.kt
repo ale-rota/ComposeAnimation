@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
-import com.alerota.composeanimation.storewallheader.AnimationWithLayoutPw
+import com.alerota.composeanimation.scaffold.AnimationWithLayoutPw
 import com.alerota.composeanimation.ui.theme.ComposeAnimationTheme
 
 class MainActivity : ComponentActivity() {

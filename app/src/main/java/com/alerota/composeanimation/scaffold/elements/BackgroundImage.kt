@@ -1,4 +1,4 @@
-package com.alerota.composeanimation.storewallheader.elements
+package com.alerota.composeanimation.scaffold.elements
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

@@ -1,10 +1,13 @@
-package com.alerota.composeanimation.util
+package com.alerota.composeanimation.ui
 
-import com.alerota.composeanimation.storewallheader.Dimensions
-import com.alerota.composeanimation.storewallheader.StickyElementContainerArgumentsV2
+import com.alerota.composeanimation.scaffold.elements.Dimensions
+import com.alerota.composeanimation.util.END_ANIMATION_PERCENTAGE
+import com.alerota.composeanimation.util.MAX_SCALE
+import com.alerota.composeanimation.util.START_ANIMATION_PERCENTAGE
+import com.alerota.composeanimation.util.normalize
 
 fun provideDimensions(
-    arguments: StickyElementContainerArgumentsV2
+    arguments: ShrinkableElementArguments
 ): Dimensions {
     with(arguments) {
         // x coordinate of the center of the sticky element when the header is collapsed
