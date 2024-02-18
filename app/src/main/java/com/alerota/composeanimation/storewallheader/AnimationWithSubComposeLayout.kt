@@ -33,10 +33,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.alerota.composeanimation.storewallheader.elements.HeaderButton
 import com.alerota.composeanimation.ui.SlotsEnum
 import com.alerota.composeanimation.ui.States
 import com.alerota.composeanimation.ui.SwipeableNestedScrollConnection
@@ -91,39 +91,13 @@ internal fun AnimationWithSubComposeLayout(
         val stickyElementHorizontalMargins = Spacings.spaceM
 
         val startToolbarElementPlaceables = subcompose(SlotsEnum.StartToolbarElement) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.Magenta)
-            ) {
-                Text(
-                    modifier = Modifier
-                        .padding(18.dp)
-                        .background(Color.Magenta),
-                    text = "Start",
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-            .map { it.measure(constraints) }
+            HeaderButton(modifier = Modifier, text = "Start")
+        }.map { it.measure(constraints) }
 
         val endToolbarElementPlaceables =
             subcompose(SlotsEnum.EndToolbarElement) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.Magenta)
-                ) {
-                    Text(
-                        modifier = Modifier
-                            .padding(18.dp)
-                            .background(Color.Magenta),
-                        text = "End",
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-                .map { it.measure(constraints) }
+                HeaderButton(modifier = Modifier, text = "End")
+            }.map { it.measure(constraints) }
 
         val toolbarHeight: Int =
             startToolbarElementPlaceables.plus(endToolbarElementPlaceables)
